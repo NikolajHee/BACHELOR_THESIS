@@ -1,0 +1,63 @@
+
+
+The following is from \cite{xu_machine_2023}.
+
+Machine unlearning to avoiud membership inference attacks (\textbf{check out [5]}) and model inversion attacks (check out [6])
+
+\textit{The right to be forgotten} is something that has been introduced in 
+\begin{itemize}
+    \item European Union's General Data Protection Regulation (GDPR)
+    \item The California Consumer Privacy Act (CCPA)
+    \item The Act on the Protection of Personal Information (APPI)
+    \item Canada's Consumer Privacy Protection Act (CPPA)
+\end{itemize}
+
+The models hold information and therefore it is not enough to just remove the data from the dataset. 
+
+
+EXACT UNLEARNING
+\[
+    \mathcal{K}(P(\mathcal{U}(\mathcal{A}(\mathcal{D}),\mathcal{D},\mathcal{D}_u)), 
+    P(\mathcal{A}(\mathcal{D}\backslash\mathcal{D}_u)))=0
+\]
+Where $\mathcal{A}$ is the learning process, $\mathcal{U}$ is the unlearning process, $\mathcal{K}$ is the KL divergence, $\mathcal{D}$ is the total dataset, $\mathcal{D}_u$ is the wished data to be unlearned. $P$ signifies the distribution of the weights.
+
+
+
+APPROXIMATIVE LEARNING captures a smaller statement. Here one wants to keep the KL between the distributions within a certain tolerance. This can be classified into two smaller catagories.
+
+WEAK UNLEARNING: here we only try to keep the output of the two models exactly the same (and do not consider all the weights inside the model)
+
+STRONG UNLEARNING: Here the goal is for all the weights to be approximately the same
+
+\textcolor{red}{Isn't there a contradiction in unlearning the data from a model, but keeping all the weights the same? The criteria of the same performance seems more crucial. }
+\textcolor{green}{Perhaps it is actually due to the fact that an attacker can infer the difference between two models when the data is unlearned? And therefore the weights are wished to be kept the same? But is the data even unlearned then is the question?}
+
+
+EVALUATION (Verification)
+\begin{itemize}
+    \item Retraining based verification (traning a model from bottom and comparing)
+    \item Tryning to simulate an attack
+    \item Relearning time-based verification (does the model improve when learned on the unlearned data? If yes, then the model probably still captures some information).
+\end{itemize}
+
+
+
+Two classes of unlearning methods: \mathbf{Data Reorganisation} and \mathbf{Model Manipulation}.
+
+\mathbf{Data Reorganisation}
+\begin{itemize}
+    \item Data obfuscation: Intentionally adding some choreographed data, as to fine tune the model with such that it unlearns the information. This could be done by adding the $\mathcal{D}_u$ but with randomly selected incorrect labels.
+    \item Data pruning
+    \item Data replacement
+\end{itemize}
+
+\mathbf{Model Manipulation}
+\begin{itemize}
+    \item Model shifting
+    \item Model replacement 
+    \item Model pruning
+\end{itemize}
+
+
+
