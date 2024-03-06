@@ -1,13 +1,63 @@
 
-Things to include in introduction:
+
+
+%Hvad er motivationen og formålet med projektet?
+
+Methods of machine learning are constantly evolving as researchers are achieving continuously improving results on numerous tasks. In the subject of biology, Google Deepmind has build AlphaFold 2 achieving incredible results on the protein folding problem \cite{jumper_highly_2021}. In the the area of Generative AI, OpenAI has constructed frameworks that shook the world, showcasing impressive models such as ChatGPT \cite{brown_language_2020} and DALL-E \cite{ramesh_zero-shot_2021}. With all these advancements within data-science, comes a backside; an increase in ethical concerns. Something one could wonder about is, where is all this data coming from? How much of the data is person data? When the data is exploited it can have great consequences. For example, in the US election of 2016 the usage of personalised adds and targeted marketing, based on data collected on Facebook are believed to have had great relevance on the votes of US citizens. There is indeed no doubt that promoting privacy could be crucial in order to protect the well-being of citizens, as the earlier presented machine learning methods hold great power.  Several acts have already begun to limit the misuse of data, e.g. in Europa the General Data Protection Law (GDPR) has ever since 2018 protected the data of citizens in Europe. This project will especially be motivated by one of the principles stated in GDPR, which explicitly say that after a subject has given consent to provide data to some application, \textit{"the data subject shall have the right to withdraw his or her consent at any time "}  \cite{noauthor_art_nodate}. 
+
+\begin{comment}
+\textit{The right to be forgotten} is something that has been introduced in 
 \begin{itemize}
-    \item Something about GDPR
-    \item something about newest direction in politics. Should probably include sources. 
+    \item European Union's General Data Protection Regulation (GDPR)
+    \item The California Consumer Privacy Act (CCPA)
+    \item The Act on the Protection of Personal Information (APPI)
+    \item Canada's Consumer Privacy Protection Act (CPPA)
 \end{itemize}
+\end{comment}
 
-\cite{franceschi_unsupervised_2019}
 
-\cite{TS2Vec}
+%• Hvem har brug for resultaterne af projektet?
+Of course it seems reasonable a subject should be able to regret their decision to share personal data. But consider the case where the data has been used to train a machine learning framework. Then each time a subject withdraws their data, the training data changes. Furthermore, to avoid so-called membership inference attacks and model inversion attacks, the whole model should also be retrained on the new training data. To avoid this, the concept of machine unlearning is applied. Instead of retraining the whole model at the full training cost, the model will 'unlearn' the relevant training data that has been removed. 
+
+
+% Hvad er projektets baggrundsviden (state-of-the-art)?
+
+
+
+
+% Hvad er problemformuleringen/forskningsspørgsmålene?
+%• Hvilken fremgangsmåde er anvendt til at løse problemstillingen?
+
+
+
+
+
+
+This project will as a starting point mimic the model created in the article "\textit{
+TS2Vec: Towards Universal Representation of Time Series}" cite{TS2Vec}. After extracting meaningful features  
+
+
+
+% reserach questions
+\textit{(to what degree it is possible) to learn meaningful features from time series data?}
+
+Ideally, the features hold important information about each of the data points, which could be used for other (downstream) tasks like prediction, interpolation or more (insert more). 
+
+\textit{To what degree is it possible to unlearn a complex model build on representation learning?}
+
+Optimally it should not be possible to see a difference between the unlearned model and a model trained on the original dataset minus the unlearned data. 
+
+
+
+
+
+
+3 Evaluation methods
+\begin{enumerate}
+\item unlearning effectiveness; does the model still work will un the unlearned samples? or robustnes against membership inference attacks
+\item model performance on its orignal tasks; the overall accuracy is not degraded
+\item computational efficency
+\end{enumerate}
 
 
 

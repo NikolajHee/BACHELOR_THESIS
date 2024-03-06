@@ -1,17 +1,104 @@
 
-@misc{xu_machine_2023,
-	title = {Machine Unlearning: A Survey},
-	url = {http://arxiv.org/abs/2306.03558},
-	shorttitle = {Machine Unlearning},
-	abstract = {Machine learning has attracted widespread attention and evolved into an enabling technology for a wide range of highly successful applications, such as intelligent computer vision, speech recognition, medical diagnosis, and more. Yet a special need has arisen where, due to privacy, usability, and/or the right to be forgotten, information about some specific samples needs to be removed from a model, called machine unlearning. This emerging technology has drawn significant interest from both academics and industry due to its innovation and practicality. At the same time, this ambitious problem has led to numerous research efforts aimed at confronting its challenges. To the best of our knowledge, no study has analyzed this complex topic or compared the feasibility of existing unlearning solutions in different kinds of scenarios. Accordingly, with this survey, we aim to capture the key concepts of unlearning techniques. The existing solutions are classified and summarized based on their characteristics within an up-to-date and comprehensive review of each category's advantages and limitations. The survey concludes by highlighting some of the outstanding issues with unlearning techniques, along with some feasible directions for new research opportunities.},
-	number = {{arXiv}:2306.03558},
+@misc{ramesh_zero-shot_2021,
+	title = {Zero-Shot Text-to-Image Generation},
+	url = {http://arxiv.org/abs/2102.12092},
+	abstract = {Text-to-image generation has traditionally focused on finding better modeling assumptions for training on a fixed dataset. These assumptions might involve complex architectures, auxiliary losses, or side information such as object part labels or segmentation masks supplied during training. We describe a simple approach for this task based on a transformer that autoregressively models the text and image tokens as a single stream of data. With sufficient data and scale, our approach is competitive with previous domain-specific models when evaluated in a zero-shot fashion.},
+	number = {{arXiv}:2102.12092},
 	publisher = {{arXiv}},
-	author = {Xu, Heng and Zhu, Tianqing and Zhang, Lefeng and Zhou, Wanlei and Yu, Philip S.},
-	urldate = {2024-02-13},
-	date = {2023-06-06},
+	author = {Ramesh, Aditya and Pavlov, Mikhail and Goh, Gabriel and Gray, Scott and Voss, Chelsea and Radford, Alec and Chen, Mark and Sutskever, Ilya},
+	urldate = {2024-03-06},
+	date = {2021-02-26},
 	eprinttype = {arxiv},
-	eprint = {2306.03558 [cs]},
-	keywords = {Computer Science - Cryptography and Security, Computer Science - Machine Learning},
+	eprint = {2102.12092 [cs]},
+	keywords = {Computer Science - Computer Vision and Pattern Recognition, Computer Science - Machine Learning, Introduction},
+}
+
+@misc{brown_language_2020,
+	title = {Language Models are Few-Shot Learners},
+	url = {http://arxiv.org/abs/2005.14165},
+	abstract = {Recent work has demonstrated substantial gains on many {NLP} tasks and benchmarks by pre-training on a large corpus of text followed by fine-tuning on a specific task. While typically task-agnostic in architecture, this method still requires task-specific fine-tuning datasets of thousands or tens of thousands of examples. By contrast, humans can generally perform a new language task from only a few examples or from simple instructions - something which current {NLP} systems still largely struggle to do. Here we show that scaling up language models greatly improves task-agnostic, few-shot performance, sometimes even reaching competitiveness with prior state-of-the-art fine-tuning approaches. Specifically, we train {GPT}-3, an autoregressive language model with 175 billion parameters, 10x more than any previous non-sparse language model, and test its performance in the few-shot setting. For all tasks, {GPT}-3 is applied without any gradient updates or fine-tuning, with tasks and few-shot demonstrations specified purely via text interaction with the model. {GPT}-3 achieves strong performance on many {NLP} datasets, including translation, question-answering, and cloze tasks, as well as several tasks that require on-the-fly reasoning or domain adaptation, such as unscrambling words, using a novel word in a sentence, or performing 3-digit arithmetic. At the same time, we also identify some datasets where {GPT}-3's few-shot learning still struggles, as well as some datasets where {GPT}-3 faces methodological issues related to training on large web corpora. Finally, we find that {GPT}-3 can generate samples of news articles which human evaluators have difficulty distinguishing from articles written by humans. We discuss broader societal impacts of this finding and of {GPT}-3 in general.},
+	number = {{arXiv}:2005.14165},
+	publisher = {{arXiv}},
+	author = {Brown, Tom B. and Mann, Benjamin and Ryder, Nick and Subbiah, Melanie and Kaplan, Jared and Dhariwal, Prafulla and Neelakantan, Arvind and Shyam, Pranav and Sastry, Girish and Askell, Amanda and Agarwal, Sandhini and Herbert-Voss, Ariel and Krueger, Gretchen and Henighan, Tom and Child, Rewon and Ramesh, Aditya and Ziegler, Daniel M. and Wu, Jeffrey and Winter, Clemens and Hesse, Christopher and Chen, Mark and Sigler, Eric and Litwin, Mateusz and Gray, Scott and Chess, Benjamin and Clark, Jack and Berner, Christopher and {McCandlish}, Sam and Radford, Alec and Sutskever, Ilya and Amodei, Dario},
+	urldate = {2024-03-06},
+	date = {2020-07-22},
+	eprinttype = {arxiv},
+	eprint = {2005.14165 [cs]},
+	keywords = {Computer Science - Computation and Language, Introduction},
+}
+
+@article{jumper_highly_2021,
+	title = {Highly accurate protein structure prediction with {AlphaFold}},
+	volume = {596},
+	rights = {2021 The Author(s)},
+	issn = {1476-4687},
+	url = {https://www.nature.com/articles/s41586-021-03819-2},
+	doi = {10.1038/s41586-021-03819-2},
+	abstract = {Proteins are essential to life, and understanding their structure can facilitate a mechanistic understanding of their function. Through an enormous experimental effort1–4, the structures of around 100,000 unique proteins have been determined5, but this represents a small fraction of the billions of known protein sequences6,7. Structural coverage is bottlenecked by the months to years of painstaking effort required to determine a single protein structure. Accurate computational approaches are needed to address this gap and to enable large-scale structural bioinformatics. Predicting the three-dimensional structure that a protein will adopt based solely on its amino acid sequence—the structure prediction component of the ‘protein folding problem’8—has been an important open research problem for more than 50 years9. Despite recent progress10–14, existing methods fall far short of atomic accuracy, especially when no homologous structure is available. Here we provide the first computational method that can regularly predict protein structures with atomic accuracy even in cases in which no similar structure is known. We validated an entirely redesigned version of our neural network-based model, {AlphaFold}, in the challenging 14th Critical Assessment of protein Structure Prediction ({CASP}14)15, demonstrating accuracy competitive with experimental structures in a majority of cases and greatly outperforming other methods. Underpinning the latest version of {AlphaFold} is a novel machine learning approach that incorporates physical and biological knowledge about protein structure, leveraging multi-sequence alignments, into the design of the deep learning algorithm.},
+	pages = {583--589},
+	number = {7873},
+	journaltitle = {Nature},
+	author = {Jumper, John and Evans, Richard and Pritzel, Alexander and Green, Tim and Figurnov, Michael and Ronneberger, Olaf and Tunyasuvunakool, Kathryn and Bates, Russ and Žídek, Augustin and Potapenko, Anna and Bridgland, Alex and Meyer, Clemens and Kohl, Simon A. A. and Ballard, Andrew J. and Cowie, Andrew and Romera-Paredes, Bernardino and Nikolov, Stanislav and Jain, Rishub and Adler, Jonas and Back, Trevor and Petersen, Stig and Reiman, David and Clancy, Ellen and Zielinski, Michal and Steinegger, Martin and Pacholska, Michalina and Berghammer, Tamas and Bodenstein, Sebastian and Silver, David and Vinyals, Oriol and Senior, Andrew W. and Kavukcuoglu, Koray and Kohli, Pushmeet and Hassabis, Demis},
+	urldate = {2024-03-05},
+	date = {2021-08},
+	langid = {english},
+	note = {Publisher: Nature Publishing Group},
+	keywords = {Computational biophysics, Introduction, Machine learning, Protein structure predictions, Structural biology},
+}
+
+@online{noauthor_art_nodate,
+	title = {Art. 7 {GDPR} – Conditions for consent},
+	url = {https://gdpr-info.eu/art-7-gdpr/},
+	abstract = {Where processing is based on consent, the controller shall be able to demonstrate that the data subject has consented to processing of his or her personal data. 1If the data subject’s consent is given in the context of a written declaration which also concerns other matters, the request for consent shall be presented in a … Continue reading Art. 7 {GDPR} – Conditions for consent},
+	titleaddon = {General Data Protection Regulation ({GDPR})},
+	urldate = {2024-03-03},
+	langid = {american},
+	keywords = {Introduction},
+}
+
+@misc{wagner_ptb-xl_nodate,
+	title = {{PTB}-{XL}, a large publicly available electrocardiography dataset},
+	url = {https://physionet.org/content/ptb-xl/1.0.3/},
+	doi = {10.13026/KFZX-AW45},
+	abstract = {Electrocardiography ({ECG}) is a key diagnostic tool to assess the cardiac
+condition of a patient. Automatic {ECG} interpretation algorithms as diagnosis
+support systems promise large reliefs for the medical personnel - only on the
+basis of the number of {ECGs} that are routinely taken. However, the development
+of such algorithms requires large training datasets and clear benchmark
+procedures. In our opinion, both aspects are not covered satisfactorily by
+existing freely accessible {ECG} datasets.
+
+The {PTB}-{XL} {ECG} dataset is a large dataset of 21799 clinical 12-lead {ECGs} from
+18869 patients of 10 second length. The raw waveform data was annotated by up
+to two cardiologists, who assigned potentially multiple {ECG} statements to each
+record. The in total 71 different {ECG} statements conform to the {SCP}-{ECG}
+standard and cover diagnostic, form, and rhythm statements. To ensure
+comparability of machine learning algorithms trained on the dataset, we
+provide recommended splits into training and test sets. In combination with
+the extensive annotation, this turns the dataset into a rich resource for the
+training and the evaluation of automatic {ECG} interpretation algorithms. The
+dataset is complemented by extensive metadata on demographics, infarction
+characteristics, likelihoods for diagnostic {ECG} statements as well as
+annotated signal properties.},
+	version = {1.0.3},
+	publisher = {{PhysioNet}},
+	author = {Wagner, Patrick and Strodthoff, Nils and Bousseljot, Ralf-Dieter and Samek, Wojciech and Schaeffter, Tobias},
+	urldate = {2024-02-25},
+}
+
+@misc{nguyen_learning_2023,
+	title = {Learning Robust and Consistent Time Series Representations: A Dilated Inception-Based Approach},
+	url = {http://arxiv.org/abs/2306.06579},
+	shorttitle = {Learning Robust and Consistent Time Series Representations},
+	abstract = {Representation learning for time series has been an important research area for decades. Since the emergence of the foundation models, this topic has attracted a lot of attention in contrastive self-supervised learning, to solve a wide range of downstream tasks. However, there have been several challenges for contrastive time series processing. First, there is no work considering noise, which is one of the critical factors affecting the efficacy of time series tasks. Second, there is a lack of efficient yet lightweight encoder architectures that can learn informative representations robust to various downstream tasks. To fill in these gaps, we initiate a novel sampling strategy that promotes consistent representation learning with the presence of noise in natural time series. In addition, we propose an encoder architecture that utilizes dilated convolution within the Inception block to create a scalable and robust network architecture with a wide receptive field. Experiments demonstrate that our method consistently outperforms state-of-the-art methods in forecasting, classification, and abnormality detection tasks, e.g. ranks first over two-thirds of the classification {UCR} datasets, with only \$40{\textbackslash}\%\$ of the parameters compared to the second-best approach. Our source code for {CoInception} framework is accessible at https://github.com/anhduy0911/{CoInception}.},
+	number = {{arXiv}:2306.06579},
+	publisher = {{arXiv}},
+	author = {Nguyen, Anh Duy and Tran, Trang H. and Pham, Hieu H. and Nguyen, Phi Le and Nguyen, Lam M.},
+	urldate = {2024-02-15},
+	date = {2023-06-11},
+	eprinttype = {arxiv},
+	eprint = {2306.06579 [cs]},
+	keywords = {Computer Science - Machine Learning},
 }
 
 @inproceedings{franceschi_unsupervised_2019,
@@ -24,7 +111,7 @@
 	author = {Franceschi, Jean-Yves and Dieuleveut, Aymeric and Jaggi, Martin},
 	urldate = {2024-02-13},
 	date = {2019},
-	keywords = {{UNORGANISED}},
+	keywords = {Contrastive Learning, Self-supervised},
 }
 
 @misc{yue_ts2vec_2022,
@@ -40,7 +127,51 @@
 	date = {2022-02-03},
 	eprinttype = {arxiv},
 	eprint = {2106.10466 [cs]},
-	keywords = {Computer Science - Artificial Intelligence, Computer Science - Machine Learning, {UNORGANISED}},
+	keywords = {Computer Science - Artificial Intelligence, Computer Science - Machine Learning, Contrastive Learning, Self-supervised},
+}
+
+@misc{zhang_self-supervised_2023,
+	title = {Self-Supervised Time Series Representation Learning via Cross Reconstruction Transformer},
+	url = {http://arxiv.org/abs/2205.09928},
+	abstract = {Unsupervised/self-supervised representation learning in time series is critical since labeled samples are usually scarce in real-world scenarios. Existing approaches mainly leverage the contrastive learning framework, which automatically learns to understand the similar and dissimilar data pairs. Nevertheless, they are restricted to the prior knowledge of constructing pairs, cumbersome sampling policy, and unstable performances when encountering sampling bias. Also, few works have focused on effectively modeling across temporal-spectral relations to extend the capacity of representations. In this paper, we aim at learning representations for time series from a new perspective and propose Cross Reconstruction Transformer ({CRT}) to solve the aforementioned problems in a unified way. {CRT} achieves time series representation learning through a cross-domain dropping-reconstruction task. Specifically, we transform time series into the frequency domain and randomly drop certain parts in both time and frequency domains. Dropping can maximally preserve the global context compared to cropping and masking. Then a transformer architecture is utilized to adequately capture the cross-domain correlations between temporal and spectral information through reconstructing data in both domains, which is called Dropped Temporal-Spectral Modeling. To discriminate the representations in global latent space, we propose Instance Discrimination Constraint to reduce the mutual information between different time series and sharpen the decision boundaries. Additionally, we propose a specified curriculum learning strategy to optimize the {CRT}, which progressively increases the dropping ratio in the training process.},
+	number = {{arXiv}:2205.09928},
+	publisher = {{arXiv}},
+	author = {Zhang, Wenrui and Yang, Ling and Geng, Shijia and Hong, Shenda},
+	urldate = {2024-02-15},
+	date = {2023-07-07},
+	eprinttype = {arxiv},
+	eprint = {2205.09928 [cs]},
+	keywords = {Computer Science - Machine Learning, Self-supervised, Time-series},
+}
+
+@misc{eldele_time-series_2021,
+	title = {Time-Series Representation Learning via Temporal and Contextual Contrasting},
+	url = {http://arxiv.org/abs/2106.14112},
+	doi = {10.48550/arXiv.2106.14112},
+	abstract = {Learning decent representations from unlabeled time-series data with temporal dynamics is a very challenging task. In this paper, we propose an unsupervised Time-Series representation learning framework via Temporal and Contextual Contrasting ({TS}-{TCC}), to learn time-series representation from unlabeled data. First, the raw time-series data are transformed into two different yet correlated views by using weak and strong augmentations. Second, we propose a novel temporal contrasting module to learn robust temporal representations by designing a tough cross-view prediction task. Last, to further learn discriminative representations, we propose a contextual contrasting module built upon the contexts from the temporal contrasting module. It attempts to maximize the similarity among different contexts of the same sample while minimizing similarity among contexts of different samples. Experiments have been carried out on three real-world time-series datasets. The results manifest that training a linear classifier on top of the features learned by our proposed {TS}-{TCC} performs comparably with the supervised training. Additionally, our proposed {TS}-{TCC} shows high efficiency in few-labeled data and transfer learning scenarios. The code is publicly available at https://github.com/emadeldeen24/{TS}-{TCC}.},
+	number = {{arXiv}:2106.14112},
+	publisher = {{arXiv}},
+	author = {Eldele, Emadeldeen and Ragab, Mohamed and Chen, Zhenghua and Wu, Min and Kwoh, Chee Keong and Li, Xiaoli and Guan, Cuntai},
+	urldate = {2024-02-13},
+	date = {2021-06-26},
+	eprinttype = {arxiv},
+	eprint = {2106.14112 [cs]},
+	keywords = {Computer Science - Artificial Intelligence, Computer Science - Machine Learning, Contrastive Learning, Self-supervised, Time-series},
+}
+
+@misc{xu_machine_2023,
+	title = {Machine Unlearning: A Survey},
+	url = {http://arxiv.org/abs/2306.03558},
+	shorttitle = {Machine Unlearning},
+	abstract = {Machine learning has attracted widespread attention and evolved into an enabling technology for a wide range of highly successful applications, such as intelligent computer vision, speech recognition, medical diagnosis, and more. Yet a special need has arisen where, due to privacy, usability, and/or the right to be forgotten, information about some specific samples needs to be removed from a model, called machine unlearning. This emerging technology has drawn significant interest from both academics and industry due to its innovation and practicality. At the same time, this ambitious problem has led to numerous research efforts aimed at confronting its challenges. To the best of our knowledge, no study has analyzed this complex topic or compared the feasibility of existing unlearning solutions in different kinds of scenarios. Accordingly, with this survey, we aim to capture the key concepts of unlearning techniques. The existing solutions are classified and summarized based on their characteristics within an up-to-date and comprehensive review of each category's advantages and limitations. The survey concludes by highlighting some of the outstanding issues with unlearning techniques, along with some feasible directions for new research opportunities.},
+	number = {{arXiv}:2306.03558},
+	publisher = {{arXiv}},
+	author = {Xu, Heng and Zhu, Tianqing and Zhang, Lefeng and Zhou, Wanlei and Yu, Philip S.},
+	urldate = {2024-02-13},
+	date = {2023-06-06},
+	eprinttype = {arxiv},
+	eprint = {2306.03558 [cs]},
+	keywords = {Computer Science - Cryptography and Security, Computer Science - Machine Learning},
 }
 
 @misc{shaik_exploring_2024,
