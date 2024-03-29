@@ -1,21 +1,77 @@
 
+
+
+% Write something about machine unlearning in general
+Before exactly defining machine unlearning, the general purpose of machine learning will be described first. Given a dataset $\mathcal{D}$, the objective is with some training algorithm $\mathcal{T}$ to learn a model $\mathcal{M}$ to perform as good as possible 
+
+
+
+Tradeoff between
+\begin{enumerate}
+    \item The forgetness
+    \item the efficiency
+    \item high accuracy after forgetness
+\end{enumerate}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\[
+    \mathcal{D}_{te} \cap \mathcal{D}_{tr} = \mathcal{D}
+\]
+
+\[
+    \mathcal{D}_{te} \cup \mathcal{D}_{tr} = \emptyset
+\]
+
+
 machine unlearning of zann because they genreally are compututional heavty
 
 
-The following is from \cite{xu_machine_2023}.
-
-Machine unlearning to avoiud membership inference attacks (\textbf{check out [5]}) and model inversion attacks (check out [6])
-
-\subsection{membership inference attacks}
-Given a data record and black-box access to a model, determine if the record was in the model's training data. 
 
 
 
+Machine Unlearning can be separated into different categories \textit{Weak Unlearning}, \textit{Strong Unlearning} and \textit{Exact Unlearning}.
+
+
+ 
+
+\begin{definition}[Weak Unlearning]
+    here we only try to keep the output of the two models exactly the same (and do not consider all the weights inside the model)
+\end{definition}
+
+APPROXIMATIVE LEARNING captures a smaller statement. Here one wants to keep the KL between the distributions within a certain tolerance. This can be classified into two smaller catagories.
+
+\begin{definition}[Strong Unlearning]
+     Here the goal is for all the weights to be approximately the same
+\end{definition}
+
+\begin{definition}[Exact Unlearning]
+    dump
+\end{definition}
 
 The models hold information and therefore it is not enough to just remove the data from the dataset. 
 
 
-EXACT UNLEARNING
+
+
+
 \[
     \mathcal{K}(P(\mathcal{U}(\mathcal{A}(\mathcal{D}),\mathcal{D},\mathcal{D}_u)), 
     P(\mathcal{A}(\mathcal{D}\backslash\mathcal{D}_u)))=0
@@ -24,14 +80,6 @@ Where $\mathcal{A}$ is the learning process, $\mathcal{U}$ is the unlearning pro
 
 
 
-APPROXIMATIVE LEARNING captures a smaller statement. Here one wants to keep the KL between the distributions within a certain tolerance. This can be classified into two smaller catagories.
-
-WEAK UNLEARNING: here we only try to keep the output of the two models exactly the same (and do not consider all the weights inside the model)
-
-STRONG UNLEARNING: Here the goal is for all the weights to be approximately the same
-
-\textcolor{red}{Isn't there a contradiction in unlearning the data from a model, but keeping all the weights the same? The criteria of the same performance seems more crucial. }
-\textcolor{green}{Perhaps it is actually due to the fact that an attacker can infer the difference between two models when the data is unlearned? And therefore the weights are wished to be kept the same? But is the data even unlearned then is the question?}
 
 
 EVALUATION (Verification)
@@ -58,6 +106,93 @@ Two classes of unlearning methods: \textbf{Data Reorganisation} and \textbf{Mode
     \item Model replacement 
     \item Model pruning
 \end{itemize}
+
+
+
+
+
+
+\section{Data Reorganisation}
+
+
+
+\begin{algorithm}
+\caption{An algorithm with caption}\label{alg:cap}
+\begin{algorithmic}
+\Require $n \geq 0$
+\Ensure $y = x^n$
+\State $y \gets 1$
+\State $X \gets x$
+\State $N \gets n$
+\While{$N \neq 0$}
+\If{$N$ is even}
+    \State $X \gets X \times X$
+    \State $N \gets \frac{N}{2}$  \Comment{This is a comment}
+\ElsIf{$N$ is odd}
+    \State $y \gets y \times X$
+    \State $N \gets N - 1$
+\EndIf
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+
+\section{Model Manipulation}
+
+
+
+
+
+
+\section{Amnesiac Unlearning}
+
+The main goal of Amnesiac Unlearning as described in \cite{graves_amnesiac_2020} is to remember each time an observation is used to update parameters. Specifically, this includes remembering each batch that the certain observation was a part of among with each of the parameters updates. Suppose one starts with some  model with initial parameters $\theta_{initial}$. Then to obtain some model $\theta_{M}$, the initial parameters are updated for $E$ epochs containing $B$ batches each. Then the updates of the parameters can be described as:
+\[
+    \theta_M = \theta_{initial} + \sum^E_{e=1} \sum^B_{b=1} \Delta_{\theta_{e,b}}
+\]
+Thereby obtaining a trained model $M$. Now suppose some observations are to be removed. Then the set of \textit{sensitive batches}: $SB$ are used to remove the learned data from the model. This can be formulated as:
+\[
+    \theta_{M'} = \theta_{initial} + \sum^E_{e=1} \sum^B_{b=1} \Delta_{\theta_{e,b}} - \sum_{sb=1}^{SB} \Delta_{\theta_{sb}}
+\]
+This could of course fast become infeasible due to the need to store a big amount of parameter updates, having a space complexity of $\mathcal{O}(EB)$.
+
+
+
+
+\section{SCRUB}
+SCalable Remembering and Unlearning unBound
+
+
+
+Having a teacher-student system, where the certain samples are learned to the student to be bad at predciting it. 
+
+\url{https://proceedings.neurips.cc/paper_files/paper/2023/file/062d711fb777322e2152435459e6e9d9-Paper-Conference.pdf}
+
+
+
+
+The following is from \cite{xu_machine_2023}.
+
+Machine unlearning to avoiud membership inference attacks (\textbf{check out [5]}) and model inversion attacks (check out [6])
+
+\textbf{membership inference attacks}
+
+Given a data record and black-box access to a model, determine if the record was in the model's training data. 
+
+Information leakage.
+
+Motivation: Model behaves differently on data that is has been trained on vs data it has not. This is often dispicted as overfitting but can also be other things. The model itself has an importance for how much the information is leaked as shown in \cite{shokri_membership_2017}. 
+
+By black-box it is meant that there is acess to the prediction of the model, but not the actual weights of the model. 
+
+
+
+
+\textbf{model-inversion}
+
+
+\cite{fredrikson_model_2015}
+
 
 
 
