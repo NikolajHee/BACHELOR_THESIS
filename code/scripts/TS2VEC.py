@@ -8,6 +8,8 @@ from torch import nn
 import warnings
 import numpy as np
 from torch.distributions.bernoulli import Bernoulli
+from classifier import classifier_train
+
 
 
 # TODO: Make faster
@@ -281,7 +283,12 @@ def temporal_contrastive_loss(z1, z2):
 
 
 
-def train(verbose=False, output_dim=256, batches=3, n_epochs=30, batch_size=10):
+def train(verbose=False, 
+          output_dim=256, 
+          batches=3, 
+          n_epochs=30, 
+          batch_size=10,
+          class_points=1000):
 
     from data import PTB_XL
 
@@ -295,8 +302,11 @@ def train(verbose=False, output_dim=256, batches=3, n_epochs=30, batch_size=10):
     #n_epochs  = 30
     
     loss_save = np.zeros((n_epochs, batches))
+    class_save = np.zeros((n_epochs, ))
+    
 
     for epoch in range(n_epochs):
+        class_loss_list = []
         dataset = PTB_XL(batch_size=batch_size, shuffle_=True)
         for i in range(batches):
             X = dataset.load_some_signals()
@@ -311,7 +321,12 @@ def train(verbose=False, output_dim=256, batches=3, n_epochs=30, batch_size=10):
             z2 = model.forward(test2['s'])
 
             loss = hierarchical_contrastive_loss(z1,  z2)
-            if i%10==0 and verbose: print(f"Epoch: {epoch}. Iter: {i}. Loss: {loss}")
+            if verbose: 
+                class_loss = classifier_train('logistic', model, class_points)
+                class_loss_list.append(class_loss)
+                print(class_loss)
+                print(f"Epoch: {epoch}. Iter: {i}. HierLoss: {loss}. ClassLoss {class_loss}.")
+                
 
             loss.backward()
 
@@ -320,8 +335,13 @@ def train(verbose=False, output_dim=256, batches=3, n_epochs=30, batch_size=10):
             loss_save[epoch, i] = loss
             
             optimizer.step()
+
+        class_save[epoch] = np.mean(class_loss_list)
+
+
+
     print('Finished')
-    return loss_save
+    return loss_save, class_save
 
 
 
@@ -334,7 +354,12 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
 
-    loss_save = train()
+    loss_save =   train(verbose=True, 
+                 output_dim=256, 
+                 batches=1, 
+                 batch_size=1, 
+                 n_epochs=20,
+                 class_points=10)
 
     loss_mean = np.mean(loss_save, axis=1)
 

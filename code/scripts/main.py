@@ -26,14 +26,22 @@ if not os.path.exists(save_path):
 if args.model.lower() == 'ts2vec':
     from TS2VEC import train
 
-    loss = train(verbose=True, output_dim=256, batches=100, batch_size=10, n_epochs=20)
+    loss, class_loss = train(verbose=args.verbose, 
+                 output_dim=256, 
+                 batches=1, 
+                 batch_size=1, 
+                 n_epochs=20,
+                 class_points=10)
 
     loss_mean = np.mean(loss, axis=1)
 
     plt.plot(loss_mean)
     plt.savefig(save_path + '/first_loss_function.png')
     plt.close()
-    
+
+    plt.plot(class_loss)
+    plt.savefig(save_path + '/class_loss_function.png')
+    plt.close()
     #train(args.save_file)
 
 #print(args.filename, args.count, args.verbose)
