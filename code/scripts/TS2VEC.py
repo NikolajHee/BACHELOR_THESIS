@@ -335,7 +335,7 @@ def train(verbose=False,
             
             optimizer.step()
 
-        class_save[epoch] = np.mean(class_loss_list)
+        class_save[epoch] = np.sum(class_loss_list)
 
 
 

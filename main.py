@@ -28,10 +28,10 @@ if args.model.lower() == 'ts2vec':
 
     loss, class_loss = train(verbose=args.verbose, 
                  output_dim=256, 
-                 batches=1, 
-                 batch_size=1, 
+                 batches=10, 
+                 batch_size=100, 
                  n_epochs=20,
-                 class_points=10)
+                 class_points=1000)
 
     loss_mean = np.mean(loss, axis=1)
 
