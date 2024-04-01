@@ -164,7 +164,7 @@ class dilated_CNN_layer(nn.Module):
         super().__init__()
         self.CNN = nn.Sequential(*[
             CNN_block(i) 
-            for i in range(2)
+            for i in range(10)
         ])
 
     

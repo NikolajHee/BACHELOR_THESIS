@@ -14,7 +14,7 @@ print("data-shuffling is seeded.")
 class PTB_XL:
     def __init__(self, 
                  batch_size, 
-                 path_to_data='/Users/nikolajhertz/Desktop/GIT/BACHELOR_THESIS/code/data/PTB_XL',
+                 path_to_data='code/data/PTB_XL',
                  shuffle_=True
                  ):
         self.batch_size = batch_size

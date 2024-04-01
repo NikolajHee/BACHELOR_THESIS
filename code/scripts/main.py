@@ -26,7 +26,7 @@ if not os.path.exists(save_path):
 if args.model.lower() == 'ts2vec':
     from TS2VEC import train
 
-    loss = train(verbose=True, output_dim=256, batches=1, batch_size=1, n_epochs=5)
+    loss = train(verbose=True, output_dim=256, batches=100, batch_size=10, n_epochs=20)
 
     loss_mean = np.mean(loss, axis=1)
 
