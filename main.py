@@ -24,7 +24,7 @@ if not os.path.exists(save_path):
     os.makedirs(save_path)
 
 if args.model.lower() == 'ts2vec':
-    from TS2VEC import train
+    from code.scripts.TS2VEC import train
 
     loss, class_loss = train(verbose=args.verbose, 
                  output_dim=256, 

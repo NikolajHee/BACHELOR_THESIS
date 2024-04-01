@@ -11,11 +11,16 @@ import ast
 random.seed(0)
 print("data-shuffling is seeded.")
 
+import pickle
+
+# Read dictionary pkl file
+with open('code/scripts/save_path.pkl', 'rb') as fp:
+    save_path = pickle.load(fp)
 
 class PTB_XL:
     def __init__(self, 
                  batch_size, 
-                 path_to_data='/Users/nikolajhertz/Desktop/GIT/BACHELOR_THESIS/code/data/PTB_XL',
+                 path_to_data=save_path['data_path'],
                  shuffle_=True
                  ):
         self.batch_size = batch_size

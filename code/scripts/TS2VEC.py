@@ -8,7 +8,7 @@ from torch import nn
 import warnings
 import numpy as np
 from torch.distributions.bernoulli import Bernoulli
-from classifier import classifier_train
+from code.scripts.classifier import classifier_train
 
 
 
@@ -290,7 +290,7 @@ def train(verbose=False,
           batch_size=10,
           class_points=1000):
 
-    from data import PTB_XL
+    from code.scripts.data import PTB_XL
 
     
 
@@ -324,7 +324,6 @@ def train(verbose=False,
             if verbose: 
                 class_loss = classifier_train('logistic', model, class_points)
                 class_loss_list.append(class_loss)
-                print(class_loss)
                 print(f"Epoch: {epoch}. Iter: {i}. HierLoss: {loss}. ClassLoss {class_loss}.")
                 
 

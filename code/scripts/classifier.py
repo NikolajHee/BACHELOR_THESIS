@@ -6,7 +6,7 @@ from sklearn import svm
 from sklearn.linear_model import LogisticRegression
 
 
-from data_backup import PTB_XL
+from code.scripts.data_backup import PTB_XL
 
 
 
@@ -28,7 +28,7 @@ def classifier_train(classifier_name, H, N_points):
 
     classifier.fit(z, y)
         
-    accuracy = classifier.predict(z) 
+    accuracy = np.mean(classifier.predict(z) == y)
 
     return accuracy
 
