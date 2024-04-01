@@ -310,7 +310,6 @@ def train(verbose=False,
     
 
     for epoch in range(n_epochs):
-        class_loss_list = []
         dataset = PTB_XL(batch_size=batch_size, shuffle_=True)
         for i in range(batches):
             X = dataset.load_some_signals()
@@ -326,10 +325,7 @@ def train(verbose=False,
             z2 = model.forward(test2['s'])
 
             loss = hierarchical_contrastive_loss(z1,  z2)
-            if i%10==0: 
-                class_loss, baseline = classifier_train('logistic', model, class_points, device=DEVICE)
-                class_loss_list.append(class_loss)
-                print(f"Epoch: {epoch}. Iter: {i}. HierLoss: {loss}. ClassLoss {class_loss}. Baseline: {baseline}.")
+            if i%50==0: print(f"Epoch: {epoch}. Iter: {i}. HierLoss: {loss}.")
                 
 
             loss.backward()
@@ -339,12 +335,15 @@ def train(verbose=False,
             loss_save[epoch, i] = loss.item()
             
             optimizer.step()
+        class_loss, baseline = classifier_train('logistic', model, class_points, device=DEVICE)
 
-        class_save[epoch] = np.mean(class_loss_list)
+        class_save[epoch] = class_loss
+
+        print(f"ClassLoss {class_loss}. Baseline: {baseline}.")
 
 
 
-    print('Finished')
+    print('Finished training TS2VEC')
     return loss_save, class_save
 
 

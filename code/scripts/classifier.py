@@ -20,6 +20,7 @@ def classifier_train(classifier_name, H, N_points, device):
     X, y = dataset.load_some_signals()
 
     z = H(X.to(device))
+    # Maxpooling is inspried by the TS2VEC framework for classification
     z = F.max_pool1d(z, kernel_size=z.shape[1])
 
     z = z.detach().cpu().numpy().reshape(z.shape[0], -1)

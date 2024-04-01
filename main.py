@@ -28,12 +28,15 @@ if args.model.lower() == 'ts2vec':
 
     loss, class_loss = train(verbose=args.verbose, 
                  output_dim=256, 
-                 batches=10, 
-                 batch_size=100, 
+                 batches=40, 
+                 batch_size=128, 
                  n_epochs=20,
-                 class_points=100)
+                 class_points=500)
 
     loss_mean = np.mean(loss, axis=1)
+
+    np.save(os.path.join(save_path, 'ts2vec_loss.png'), loss_mean)
+    np.save(os.path.join(save_path, 'class_loss.png'), class_loss)
 
     plt.plot(loss_mean)
     plt.savefig(save_path + '/first_loss_function.png')
