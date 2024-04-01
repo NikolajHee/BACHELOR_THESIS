@@ -287,20 +287,29 @@ def temporal_contrastive_loss(z1, z2):
 
 
 
-def train(verbose=False, 
+def train(classifier,
           output_dim=256, 
           batches=3, 
           n_epochs=30, 
           batch_size=10,
-          class_points=1000):
+          class_points=1000,
+          learning_rate=0.001,
+          p=0.5,
+          input_dim=12,
+          grad_clip=0.01,
+          verbose=False,):
 
     from code.scripts.data import PTB_XL
 
     
 
-    model = TS2VEC(12, output_dim, 0.5, device=DEVICE, verbose=False).to(DEVICE)
+    model = TS2VEC(input_dim=input_dim, 
+                   output_dim=output_dim, 
+                   p=p, 
+                   device=DEVICE, 
+                   verbose=verbose).to(DEVICE)
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     #n_iter = 3
     #n_epochs  = 30
@@ -330,12 +339,12 @@ def train(verbose=False,
 
             loss.backward()
 
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 0.01)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
 
             loss_save[epoch, i] = loss.item()
             
             optimizer.step()
-        class_loss, baseline = classifier_train('logistic', model, class_points, device=DEVICE)
+        class_loss, baseline = classifier_train(classifier, model, class_points, device=DEVICE)
 
         class_save[epoch] = class_loss
 
