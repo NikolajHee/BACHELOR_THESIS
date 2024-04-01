@@ -31,7 +31,7 @@ if args.model.lower() == 'ts2vec':
                  batches=10, 
                  batch_size=100, 
                  n_epochs=20,
-                 class_points=1000)
+                 class_points=100)
 
     loss_mean = np.mean(loss, axis=1)
 

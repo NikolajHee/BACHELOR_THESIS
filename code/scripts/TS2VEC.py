@@ -12,6 +12,10 @@ from code.scripts.classifier import classifier_train
 
 
 
+DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+print(f"device: {DEVICE}")
+
 # TODO: Make faster
 # TODO: Learn how the loss works
 # TODO: torch-seed the model
@@ -294,7 +298,7 @@ def train(verbose=False,
 
     
 
-    model = TS2VEC(12, output_dim, 0.5, 'cpu', False)
+    model = TS2VEC(12, output_dim, 0.5, device=DEVICE, verbose=False).to(DEVICE)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
@@ -310,6 +314,7 @@ def train(verbose=False,
         dataset = PTB_XL(batch_size=batch_size, shuffle_=True)
         for i in range(batches):
             X = dataset.load_some_signals()
+            X = X.to(DEVICE)
 
             crop = random_cropping2(False)
 
@@ -321,8 +326,8 @@ def train(verbose=False,
             z2 = model.forward(test2['s'])
 
             loss = hierarchical_contrastive_loss(z1,  z2)
-            if verbose: 
-                class_loss = classifier_train('logistic', model, class_points)
+            if i%10==0: 
+                class_loss = classifier_train('logistic', model, class_points, device=DEVICE)
                 class_loss_list.append(class_loss)
                 print(f"Epoch: {epoch}. Iter: {i}. HierLoss: {loss}. ClassLoss {class_loss}.")
                 
@@ -331,11 +336,11 @@ def train(verbose=False,
 
             torch.nn.utils.clip_grad_norm_(model.parameters(), 0.01)
 
-            loss_save[epoch, i] = loss
+            loss_save[epoch, i] = loss.item()
             
             optimizer.step()
 
-        class_save[epoch] = np.sum(class_loss_list)
+        class_save[epoch] = np.mean(class_loss_list)
 
 
 
