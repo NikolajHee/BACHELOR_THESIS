@@ -327,9 +327,9 @@ def train(verbose=False,
 
             loss = hierarchical_contrastive_loss(z1,  z2)
             if i%10==0: 
-                class_loss = classifier_train('logistic', model, class_points, device=DEVICE)
+                class_loss, baseline = classifier_train('logistic', model, class_points, device=DEVICE)
                 class_loss_list.append(class_loss)
-                print(f"Epoch: {epoch}. Iter: {i}. HierLoss: {loss}. ClassLoss {class_loss}.")
+                print(f"Epoch: {epoch}. Iter: {i}. HierLoss: {loss}. ClassLoss {class_loss}. Baseline: {baseline}.")
                 
 
             loss.backward()
