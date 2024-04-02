@@ -315,11 +315,21 @@ def train(classifier,
     #n_epochs  = 30
     
     loss_save = np.zeros((n_epochs, batches))
-    class_save = np.zeros((n_epochs, ))
+    class_save = np.zeros((n_epochs + 1, ))
+    baseline = np.zeros((n_epochs))
     
 
     for epoch in range(n_epochs):
         dataset = PTB_XL(batch_size=batch_size, shuffle_=True)
+
+        class_loss, baseline = classifier_train(classifier, model, class_points, device=DEVICE)
+
+        class_save[epoch] = class_loss
+        baseline[epoch] = baseline
+
+        print(f"ClassLoss {class_loss}. Baseline: {baseline}.")
+        
+
         for i in range(batches):
             X = dataset.load_some_signals()
             X = X.to(DEVICE)
@@ -335,7 +345,6 @@ def train(classifier,
 
             loss = hierarchical_contrastive_loss(z1,  z2)
             if i%50==0: print(f"Epoch: {epoch}. Iter: {i}. HierLoss: {loss}.")
-                
 
             loss.backward()
 
@@ -344,16 +353,15 @@ def train(classifier,
             loss_save[epoch, i] = loss.item()
             
             optimizer.step()
-        class_loss, baseline = classifier_train(classifier, model, class_points, device=DEVICE)
+        
+    class_loss, baseline = classifier_train(classifier, model, class_points, device=DEVICE)
 
-        class_save[epoch] = class_loss
+    class_save[epoch+1] = class_loss
 
-        print(f"ClassLoss {class_loss}. Baseline: {baseline}.")
-
-
-
+    print(f"Final Accuracy {class_loss}.")
     print('Finished training TS2VEC')
-    return loss_save, class_save
+
+    return loss_save, class_save, baseline
 
 
 

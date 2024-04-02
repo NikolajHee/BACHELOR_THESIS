@@ -50,7 +50,7 @@ save_parameters(save_path, vars(args))
 if args.model.lower() == 'ts2vec':
     from code.scripts.TS2VEC import train
 
-    loss, class_loss = train(classifier=args.classifier,
+    loss, class_loss, baseline = train(classifier=args.classifier,
                              output_dim=args.output_dim,
                              batches=args.batches,
                              n_epochs=args.n_epochs,
@@ -67,6 +67,7 @@ if args.model.lower() == 'ts2vec':
 
     np.save(os.path.join(save_path, 'ts2vec_loss'), loss_mean)
     np.save(os.path.join(save_path, 'class_loss'), class_loss)
+    np.save(os.path.join(save_path, 'baseline'), baseline)
 
     # plt.plot(loss_mean)
     # plt.savefig(save_path + '/first_loss_function.png')
