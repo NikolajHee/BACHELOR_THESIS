@@ -1,0 +1,13 @@
+model : ts2vec
+save_file : code/results/test_run
+classifier : logistic
+output_dim : 256
+batches : 100
+batch_size : 64
+n_epochs : 20
+class_points : 500
+learning_rate : 0.001
+p : 0.5
+input_dim : 12
+grad_clip : 0.005
+verbose : True
