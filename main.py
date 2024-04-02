@@ -37,7 +37,7 @@ save_path = args.save_file
 # add current date and time
 now = datetime.now()
 
-dt_string = now.strftime("%d_øæ%m_%Y/%H_%M_%S")
+dt_string = now.strftime("%d_%m_%Y/%H_%M_%S")
 
 save_path = os.path.join(save_path, dt_string)
 
@@ -65,8 +65,8 @@ if args.model.lower() == 'ts2vec':
 
     loss_mean = np.mean(loss, axis=1)
 
-    np.save(os.path.join(save_path, 'ts2vec_loss.png'), loss_mean)
-    np.save(os.path.join(save_path, 'class_loss.png'), class_loss)
+    np.save(os.path.join(save_path, 'ts2vec_loss'), loss_mean)
+    np.save(os.path.join(save_path, 'class_loss'), class_loss)
 
     # plt.plot(loss_mean)
     # plt.savefig(save_path + '/first_loss_function.png')
