@@ -146,10 +146,10 @@ class random_cropping2(nn.Module):
 
 
 class CNN_block(nn.Module):
-    def __init__(self, l):
+    def __init__(self, l, dim):
         super().__init__()
-        self.conv1 = nn.Conv1d(256, 256, padding='same', kernel_size=3, dilation=2**l)
-        self.conv2 = nn.Conv1d(256, 256, padding='same', kernel_size=3, dilation=2**l)
+        self.conv1 = nn.Conv1d(dim, dim, padding='same', kernel_size=3, dilation=2**l)
+        self.conv2 = nn.Conv1d(dim, dim, padding='same', kernel_size=3, dilation=2**l)
 
     def forward(self, x):
         residual = x
@@ -166,10 +166,10 @@ class dilated_CNN_layer(nn.Module):
 
     Ten residual blocks
     """
-    def __init__(self, ):
+    def __init__(self, dim):
         super().__init__()
         self.CNN = nn.Sequential(*[
-            CNN_block(i) 
+            CNN_block(l=i, dim=dim) 
             for i in range(10)
         ])
 
@@ -208,7 +208,7 @@ class TS2VEC(nn.Module):
         self.time_masking_layer = timestamp_masking_layer(p=p, verbose=verbose)
 
 
-        self.dilated_cnn_layer = dilated_CNN_layer()
+        self.dilated_cnn_layer = dilated_CNN_layer(dim=output_dim)
 
 
 
