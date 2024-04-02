@@ -316,7 +316,7 @@ def train(classifier,
     
     loss_save = np.zeros((n_epochs, batches))
     class_save = np.zeros((n_epochs + 1, ))
-    baseline = np.zeros((n_epochs))
+    baselines = np.zeros((n_epochs))
     
 
     for epoch in range(n_epochs):
@@ -325,7 +325,7 @@ def train(classifier,
         class_loss, baseline = classifier_train(classifier, model, class_points, device=DEVICE)
 
         class_save[epoch] = class_loss
-        baseline[epoch] = baseline
+        baselines[epoch] = baseline
 
         print(f"ClassLoss {class_loss}. Baseline: {baseline}.")
         
@@ -361,7 +361,7 @@ def train(classifier,
     print(f"Final Accuracy {class_loss}.")
     print('Finished training TS2VEC')
 
-    return loss_save, class_save, baseline
+    return loss_save, class_save, baselines
 
 
 
