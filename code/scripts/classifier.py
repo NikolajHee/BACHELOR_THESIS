@@ -12,7 +12,7 @@ def classifier_train(classifier_name, H, N_points, device):
     if classifier_name == 'svc':
         classifier = svm.SVC(kernel='rbf') 
     elif classifier_name == 'logistic':
-        classifier = LogisticRegression(penalty='elasticnet', l1_ratio=0.5, solver='saga')
+        classifier = LogisticRegression()
 
     dataset = PTB_XL(batch_size=N_points, shuffle_=True)
 
@@ -21,7 +21,9 @@ def classifier_train(classifier_name, H, N_points, device):
 
     z = H(X.to(device))
     # Maxpooling is inspried by the TS2VEC framework for classification
+    #print(z.shape)
     z = F.max_pool1d(z, kernel_size=z.shape[1])
+    #print(z.shape)
 
     z = z.detach().cpu().numpy().reshape(z.shape[0], -1)
     y = y.numpy()
@@ -33,4 +35,6 @@ def classifier_train(classifier_name, H, N_points, device):
     baseline = max(np.sum(y == 0), np.sum(y==1))/len(y)
 
     return accuracy, baseline
+
+
 
