@@ -26,8 +26,8 @@ class PTB_XL(Dataset):
         """
         if data_path is None:
             path = '/Users/nikolajhertz/Desktop/GIT/BACHELOR_THESIS/code/scripts/save_path.pkl'
-            #with open('code/scripts/save_path.pkl', 'rb') as fp:
-            with open(path, 'rb') as fp:
+            with open('code/scripts/save_path.pkl', 'rb') as fp:
+            #with open(path, 'rb') as fp:
                 data_path = pickle.load(fp)['data_path']
 
         self.data_path = data_path
