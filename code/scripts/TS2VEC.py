@@ -7,9 +7,10 @@ import torch
 from torch import nn
 import warnings
 import numpy as np
-from torch.distributions.bernoulli import Bernoulli
 from code.scripts.classifier import classifier_train
-
+import torch
+from torch import nn
+import torch.nn.functional as F
 
 
 DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -20,7 +21,6 @@ print(f"device: {DEVICE}")
 # TODO: Learn how the loss works
 # TODO: torch-seed the model
 # TODO: have fun
-
 
 
 
@@ -46,8 +46,6 @@ class input_projection_layer(nn.Module):
 
 
 
-
-
 class timestamp_masking_layer(nn.Module):
     """
     Randomly masking some of the values from the representation
@@ -67,9 +65,6 @@ class timestamp_masking_layer(nn.Module):
 
         masking = torch.rand((N, r, c)) > (1-self.p)
 
-        if self.verbose: 
-            print(f"Recieved {r} signals with length {c}.")
-            print(f"Masking {masking.sum()} values.")
         r_it[masking] = 0
         return r_it
 
@@ -80,47 +75,21 @@ def take_per_row(A, indx, num_elem):
     return A[torch.arange(all_indx.shape[0])[:,None], all_indx]
 
 
-class random_cropping:
-    """
-    Cropping at random
-        works only for 1 dimensional right now?
-        Only used in training
-    """
-    def __init__(self, verbose=False):
-        self.verbose = verbose
-
-
-    def __call__(self, x):
-        [T, D] = x.shape
-
-        values, indices  = torch.randint(T, (1,4)).sort(1)
-
-
-        a1, a2, b1, b2 = (values[:,i] for i in range(4))
-
-
-        if self.verbose:
-            print(f"cropping between {a1, b1} and {a2, b2}")
-
-        return (x[a1:b1, :], 
-                x[a2:b2, :], 
-                {'a1': a1.item(), 'a2': a2.item(), 'b1': b1.item(), 'b2': b2.item()})
-
 class random_cropping2(nn.Module):
     """
     Cropping at random
         works only for 1 dimensional right now?
         Only used in training
     """
+
     def __init__(self, verbose=False):
         super().__init__()
         self.verbose = verbose
 
         self.temporal_unit = 0
+    
     def __call__(self, x):
         [N, T, D] = x.shape
-
-        np.random.seed(1)
        
         ts_l = x.size(1)
         crop_l = np.random.randint(low=2 ** (self.temporal_unit + 1), high=ts_l+1)
@@ -131,17 +100,10 @@ class random_cropping2(nn.Module):
         crop_eright = np.random.randint(low=crop_right, high=ts_l + 1)
         crop_offset = np.random.randint(low=-crop_eleft, high=ts_l - crop_eright + 1, size=x.size(0))
 
-        #print(crop_offset + crop_eleft, crop_right - crop_eleft)
-        #print(crop_offset + crop_left, crop_eright - crop_left)
-        #print(crop_l)
-        test1 = take_per_row(x, crop_offset + crop_eleft, crop_right - crop_eleft)
-        test2 = take_per_row(x, crop_offset + crop_left, crop_eright - crop_left)
+        signal1 = take_per_row(x, crop_offset + crop_eleft, crop_right - crop_eleft)
+        signal2 = take_per_row(x, crop_offset + crop_left, crop_eright - crop_left)
 
-
-
-        return ({"s": test1[:, -crop_l:], "left": crop_offset + crop_eleft, "right": crop_right - crop_eleft}, 
-                {"s": test2[:, :crop_l], "left": crop_offset + crop_left, "right": crop_right - crop_eleft}, 
-                crop_l)
+        return signal1[:, -crop_l:], signal2[:, :crop_l]
 
 
 
@@ -179,17 +141,6 @@ class dilated_CNN_layer(nn.Module):
         return self.CNN(x)
 
 
-# test = input_projection_layer(12, 256, 'cpu')
-
-# x = test(some_signals)
-
-# x = x.transpose(1,2)
-
-# test2 = dilated_CNN_layer()
-
-# print(test2(x))
-
-
 
 
 class TS2VEC(nn.Module):
@@ -201,6 +152,7 @@ class TS2VEC(nn.Module):
                  verbose=False):
         
         super().__init__()
+        self.output_dim = output_dim
         self.input_project_layer = input_projection_layer(input_dim=input_dim,
                                                             output_dim=output_dim,
                                                             device = device)
@@ -226,17 +178,6 @@ class TS2VEC(nn.Module):
 
 
 
-# test = TS2VEC(12, 256, 0.5, 'cpu', True)
-
-# test_output = test.forward(some_signals)
-
-# print(test_output.shape)
-
-
-# hierarcical contrasting
-import torch
-from torch import nn
-import torch.nn.functional as F
 
 def hierarchical_contrastive_loss(z1, z2, alpha=0.5, temporal_unit=0):
     loss = torch.tensor(0., device=z1.device)
@@ -288,20 +229,27 @@ def temporal_contrastive_loss(z1, z2):
 
 
 def train(classifier,
+          dataset,
           output_dim=256, 
-          batches=3, 
           n_epochs=30, 
           batch_size=10,
-          class_points=1000,
           learning_rate=0.001,
           p=0.5,
           input_dim=12,
           grad_clip=0.01,
-          verbose=False,):
-
-    from code.scripts.data import PTB_XL
-
+          verbose=False,
+          ts_num_batches=(500, 500),
+          class_num_batches=(100,100)):
     
+    train_batches, test_batches = ts_num_batches
+
+
+    from code.scripts.utils import train_test_loaders
+    train_dataloader, test_dataloader = train_test_loaders(dataset=dataset,
+                                                        batch_size=batch_size,
+                                                        test_size=0.1,
+                                                        verbose=verbose,
+                                                        seed=0)
 
     model = TS2VEC(input_dim=input_dim, 
                    output_dim=output_dim, 
@@ -310,58 +258,103 @@ def train(classifier,
                    verbose=verbose).to(DEVICE)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-
-    #n_iter = 3
-    #n_epochs  = 30
     
-    loss_save = np.zeros((n_epochs, batches))
-    class_save = np.zeros((n_epochs + 1, ))
-    baselines = np.zeros((n_epochs))
+    train_loss_save = np.zeros((n_epochs, len(train_dataloader)))
+    test_loss_save = np.zeros((n_epochs, len(test_dataloader)))
+    train_accuracy_save = np.zeros((n_epochs + 1, len(train_dataloader)))
+    test_accuracy_save = np.zeros((n_epochs + 1, len(test_dataloader)))
     
-
     for epoch in range(n_epochs):
-        dataset = PTB_XL(batch_size=batch_size, shuffle_=True)
-
-        class_loss, baseline = classifier_train(classifier, model, class_points, device=DEVICE)
-
-        class_save[epoch] = class_loss
-        baselines[epoch] = baseline
-
-        print(f"ClassLoss {class_loss}. Baseline: {baseline}.")
+        train_dataloader, test_dataloader = train_test_loaders(dataset=dataset,
+                                                    batch_size=batch_size,
+                                                    test_size=0.1,
+                                                    verbose=verbose,
+                                                    seed=0)
         
 
-        for i in range(batches):
-            X = dataset.load_some_signals()
+        train_accuracy, test_accuracy = classifier_train(classifier, 
+                                                         model, 
+                                                         train_loader=train_dataloader, 
+                                                         test_loader=test_dataloader, 
+                                                         device=DEVICE,
+                                                         num_batches=class_num_batches)
+
+        train_accuracy_save[epoch] = train_accuracy
+        test_accuracy_save[epoch] = test_accuracy
+
+        print(f"Train accuracy {train_accuracy}. Test accuracy {test_accuracy}")
+
+        train_dataloader, test_dataloader = train_test_loaders(dataset=dataset,
+                                                    batch_size=batch_size,
+                                                    test_size=0.1,
+                                                    verbose=verbose,
+                                                    seed=0)
+        
+
+        for i, (X, Y) in enumerate(train_dataloader):
             X = X.to(DEVICE)
 
             crop = random_cropping2(False)
 
-            test1, test2, crop_l = crop(X)
+            signal_aug_1, signal_aug_2 = crop(X)
 
             optimizer.zero_grad()
 
-            z1 = model.forward(test1['s'])
-            z2 = model.forward(test2['s'])
+            z1 = model.forward(signal_aug_1.float())
+            z2 = model.forward(signal_aug_2.float())
 
             loss = hierarchical_contrastive_loss(z1,  z2)
-            if i%50==0: print(f"Epoch: {epoch}. Iter: {i}. HierLoss: {loss}.")
+            if i%1==0: print(f"Epoch: {epoch}. Iter: {i}. HierLoss: {loss}.")
 
             loss.backward()
 
             torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
 
-            loss_save[epoch, i] = loss.item()
+            train_loss_save[epoch, i] = loss.item()
             
             optimizer.step()
+
+            if (i+1) == train_batches: break
         
-    class_loss, baseline = classifier_train(classifier, model, class_points, device=DEVICE)
+        for i, (X, y) in enumerate(test_dataloader):
+            X = X.to(DEVICE)
 
-    class_save[epoch+1] = class_loss
+            crop = random_cropping2(False)
 
-    print(f"Final Accuracy {class_loss}.")
+            signal_aug_1, signal_aug_2 = crop(X)
+
+            z1 = model.forward(signal_aug_1.float())
+            z2 = model.forward(signal_aug_2.float())
+
+            loss = hierarchical_contrastive_loss(z1,  z2)
+
+            test_loss_save[epoch, i] = loss.item()
+
+            if (i+1) == test_batches: break
+    
+
+
+    train_dataloader, test_dataloader = train_test_loaders(dataset=dataset,
+                                                    batch_size=batch_size,
+                                                    test_size=0.1,
+                                                    verbose=verbose,
+                                                    seed=0)
+
+
+    train_accuracy, test_accuracy = classifier_train(classifier, 
+                                                        model, 
+                                                        train_loader=train_dataloader, 
+                                                        test_loader=test_dataloader, 
+                                                        device=DEVICE,
+                                                        num_batches=ts_num_batches)
+
+    train_accuracy_save[epoch+1] = train_accuracy
+    test_accuracy_save[epoch+1] = test_accuracy
+
+    print(f"Train accuracy {train_accuracy}. Test accuracy {test_accuracy}")
     print('Finished training TS2VEC')
 
-    return loss_save, class_save, baselines
+    return train_loss_save, test_loss_save, train_accuracy_save, test_accuracy_save
 
 
 
@@ -373,11 +366,14 @@ def train(classifier,
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
+    from dataloader import PTB_XL
+    dataset = PTB_XL()
 
-    loss_save =   train(verbose=True, 
+    loss_save =   train('logistic',
+                dataset,
+                verbose=True, 
                  output_dim=256, 
-                 batches=1, 
-                 batch_size=1, 
+                 batch_size=3, 
                  n_epochs=20,
                  class_points=10)
 
