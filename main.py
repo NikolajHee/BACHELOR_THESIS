@@ -24,8 +24,8 @@ parser.add_argument('-p', default=0.5, type=float)
 parser.add_argument('-id', '--input_dim', default=12, type=int)
 parser.add_argument('-gc', '--grad_clip', default=0.01, type=float)
 parser.add_argument('-v', '--verbose', action='store_true')
-parser.add_argument('--ts_num_batches', default=(2,2), type=tuple)
-parser.add_argument('--class_num_batches', default=(2,2), type=tuple)
+parser.add_argument('--ts_num_batches', default=[2,2], type=int, nargs='+')
+parser.add_argument('--class_num_batches', default=[2,2], type=int, nargs='+')
 
 
 args = parser.parse_args()
@@ -66,8 +66,8 @@ if args.model.lower() == 'ts2vec':
                                                                                     input_dim=args.input_dim,
                                                                                     grad_clip=args.grad_clip,
                                                                                     verbose=args.verbose,
-                                                                                    ts_num_batches=args.ts_num_batches,
-                                                                                    class_num_batches=args.class_num_batches)
+                                                                                    ts_num_batches=tuple(args.ts_num_batches),
+                                                                                    class_num_batches=tuple(args.class_num_batches))
     
 
     train_loss_mean = np.mean(train_loss_save, axis=1)
