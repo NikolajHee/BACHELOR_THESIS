@@ -47,13 +47,13 @@ def classifier_train(classifier_name,
 
         y = y.numpy()
 
-        if i < len(train_loader) - 1:
-            Z_train[i*batch_size:(i+1)*batch_size] = z.reshape(batch_size, H.output_dim)
-            Y_train[i*batch_size:(i+1)*batch_size] = y.reshape(batch_size)
-        # the last batch can be smaller
-        else:
-            Z_train[i*batch_size:] = z.reshape(-1, H.output_dim)
-            Y_train[i*batch_size:] = y.reshape(-1)
+        # if i < len(train_loader) - 1:
+        Z_train[i*batch_size:(i+1)*batch_size] = z.reshape(batch_size, H.output_dim)
+        Y_train[i*batch_size:(i+1)*batch_size] = y.reshape(batch_size)
+        # # the last batch can be smaller
+        # else:
+        #     Z_train[i*batch_size:] = z.reshape(-1, H.output_dim)
+        #     Y_train[i*batch_size:] = y.reshape(-1)
 
         if (i+1) == train_batches: break
         
@@ -76,13 +76,13 @@ def classifier_train(classifier_name,
         z = z.detach().cpu().numpy().reshape(z.shape[0], -1)
         y = y.numpy()
 
-        if i < len(test_loader) - 1:
-            Z_test[i*batch_size:(i+1)*batch_size] = z.reshape(batch_size, H.output_dim)
-            Y_test[i*batch_size:(i+1)*batch_size] = y.reshape(batch_size)
+        #if i < len(test_loader) - 1:
+        Z_test[i*batch_size:(i+1)*batch_size] = z.reshape(batch_size, H.output_dim)
+        Y_test[i*batch_size:(i+1)*batch_size] = y.reshape(batch_size)
         # the last batch can be smaller
-        else:
-            Z_test[i*batch_size:] = z.reshape(-1, H.output_dim)
-            Y_test[i*batch_size:] = y.reshape(-1)
+        # else:
+        #     Z_test[i*batch_size:] = z.reshape(-1, H.output_dim)
+        #     Y_test[i*batch_size:] = y.reshape(-1)
         
         if (i+1) == test_batches: break
 
