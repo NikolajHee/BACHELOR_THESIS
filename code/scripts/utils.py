@@ -21,8 +21,8 @@ def train_test_loaders(dataset, batch_size, test_size, verbose=False, seed=None)
     train_dataset = Subset(dataset, train_indices)
     test_dataset = Subset(dataset, test_indices)
 
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
+    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
 
     if verbose:
         print(f"train batches {len(train_dataloader)} ({len(train_dataloader.dataset)} observations).")
