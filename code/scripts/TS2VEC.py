@@ -78,12 +78,6 @@ def take_per_row(A, indx, num_elem):
 
 
 class random_cropping(nn.Module):
-    """
-    Cropping at random
-        works only for 1 dimensional right now?
-        Only used in training
-    """
-
     def __init__(self, verbose=False):
         super().__init__()
         self.verbose = verbose
@@ -117,10 +111,10 @@ class CNN_block(nn.Module):
 
     def forward(self, x):
         residual = x
+        x = F.gelu(x)
         x = self.conv1(x)
-        x = nn.ReLU()(x)
+        x = F.gelu(x)
         x = self.conv2(x)
-
         return x + residual
 
 
