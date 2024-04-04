@@ -1,0 +1,14 @@
+model : ts2vec
+dataset : PTB_XL
+save_file : code/results/big_run
+classifier : logistic
+output_dim : 64
+batch_size : 64
+n_epochs : 5
+learning_rate : 0.0005
+p : 0.5
+input_dim : 12
+grad_clip : 0.0005
+verbose : True
+ts_num_batches : [2000, 500]
+class_num_batches : [2000, 500]
