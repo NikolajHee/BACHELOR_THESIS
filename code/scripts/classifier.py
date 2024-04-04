@@ -22,7 +22,7 @@ def classifier_train(classifier_name,
     if classifier_name == 'svc':
         classifier = svm.SVC(kernel='rbf') 
     elif classifier_name == 'logistic':
-        classifier = LogisticRegression()
+        classifier = LogisticRegression(C=0.001)
     else:
         raise ValueError(f'{classifier_name} is not a choice')
 
