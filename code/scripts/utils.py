@@ -13,22 +13,23 @@ def save_parameters(save_path, dictionary):
             f.write("\n")
 
 
-def train_test_loaders(dataset, batch_size, test_size, verbose=False, seed=None):
+
+
+
+def train_test_dataset(dataset, test_proportion, train_size, test_size, verbose=False, seed=None, ):
+
     if seed is not None:
         np.random.seed(seed)
-    train_indices, test_indices = train_test_split(np.arange(0, len(dataset)), test_size=test_size)
+    train_indices, test_indices = train_test_split(np.arange(0, len(dataset)), test_size=test_proportion)
 
-    train_dataset = Subset(dataset, train_indices)
-    test_dataset = Subset(dataset, test_indices)
+    train_dataset = Subset(dataset, train_indices[:train_size])
+    test_dataset = Subset(dataset, test_indices[:test_size])
 
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
+    return train_dataset, test_dataset
 
-    if verbose:
-        print(f"train batches {len(train_dataloader)} ({len(train_dataloader.dataset)} observations).")
-        print(f"test batches {len(test_dataloader)} ({len(test_dataloader.dataset)} observations).")
-    
-    return train_dataloader, test_dataloader
+def baseline(train_dataset, test_dataset):
+    train_dataset
+
 
 class random_cropping:
     """

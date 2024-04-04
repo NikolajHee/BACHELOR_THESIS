@@ -25,9 +25,7 @@ class PTB_XL(Dataset):
         sampling_rate: amounts of sample per second
         """
         if data_path is None:
-            path = '/Users/nikolajhertz/Desktop/GIT/BACHELOR_THESIS/code/scripts/save_path.pkl'
             with open('code/scripts/save_path.pkl', 'rb') as fp:
-            #with open(path, 'rb') as fp:
                 data_path = pickle.load(fp)['data_path']
 
         self.data_path = data_path
@@ -65,32 +63,9 @@ class PTB_XL(Dataset):
         label = self.df.binary_label[idx]
 
         return signal, label
-    
-
-def train_test_loaders(dataset, batch_size, test_size, verbose=False, seed=None):
-    if seed is not None:
-        np.random.seed(seed)
-    train_indices, test_indices = train_test_split(np.arange(0, len(dataset)), test_size=test_size)
-
-    train_dataset = Subset(dataset, train_indices)
-    test_dataset = Subset(dataset, test_indices)
-
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
-
-    if verbose:
-        print(f"train batches {len(train_dataloader)} ({len(train_dataloader.dataset)} observations).")
-        print(f"test batches {len(test_dataloader)} ({len(test_dataloader.dataset)} observations).")
-    
-    return train_dataloader, test_dataloader
-
 
 
 if __name__ == '__main__':        
-    data = PTB_XL()
-
-    train_loader, test_loader = train_test_loaders(data, 16, 0.1)
-
     pass
     
 

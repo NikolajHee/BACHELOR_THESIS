@@ -11,6 +11,7 @@ from code.scripts.classifier import classifier_train
 import torch
 from torch import nn
 import torch.nn.functional as F
+from torch.utils.data import DataLoader
 
 
 DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -75,7 +76,7 @@ def take_per_row(A, indx, num_elem):
     return A[torch.arange(all_indx.shape[0])[:,None], all_indx]
 
 
-class random_cropping2(nn.Module):
+class random_cropping(nn.Module):
     """
     Cropping at random
         works only for 1 dimensional right now?
@@ -238,16 +239,14 @@ def train(classifier,
           input_dim=12,
           grad_clip=0.01,
           verbose=False,
-          ts_num_batches=(500, 500),
-          class_num_batches=(100,100)):
-    
-    train_batches, test_batches = ts_num_batches
+          N_train=1000,
+          N_test=100):
 
-
-    from code.scripts.utils import train_test_loaders
-    train_dataloader, test_dataloader = train_test_loaders(dataset=dataset,
-                                                        batch_size=batch_size,
-                                                        test_size=0.1,
+    from code.scripts.utils import train_test_dataset
+    train_dataset, test_dataset = train_test_dataset(dataset=dataset,
+                                                        test_proportion=0.1,
+                                                        train_size=N_train,
+                                                        test_size=N_test,
                                                         verbose=verbose,
                                                         seed=0)
 
@@ -259,42 +258,35 @@ def train(classifier,
 
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     
-    train_loss_save = np.zeros((n_epochs, len(train_dataloader)))
-    test_loss_save = np.zeros((n_epochs, len(test_dataloader)))
-    train_accuracy_save = np.zeros((n_epochs + 1, len(train_dataloader)))
-    test_accuracy_save = np.zeros((n_epochs + 1, len(test_dataloader)))
+    train_loss_save = np.zeros((n_epochs))
+    test_loss_save = np.zeros((n_epochs))
+    train_accuracy_save = np.zeros((n_epochs + 1))
+    test_accuracy_save = np.zeros((n_epochs + 1))
     
+
     for epoch in range(n_epochs):
-        train_dataloader, test_dataloader = train_test_loaders(dataset=dataset,
-                                                    batch_size=batch_size,
-                                                    test_size=0.1,
-                                                    verbose=verbose,
-                                                    seed=0)
+        # new shuffle for each epoch
+        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
+        test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
         
 
         train_accuracy, test_accuracy = classifier_train(classifier, 
                                                          model, 
                                                          train_loader=train_dataloader, 
                                                          test_loader=test_dataloader, 
-                                                         device=DEVICE,
-                                                         num_batches=class_num_batches)
+                                                         device=DEVICE)
 
         train_accuracy_save[epoch] = train_accuracy
         test_accuracy_save[epoch] = test_accuracy
 
         print(f"Train accuracy {train_accuracy}. Test accuracy {test_accuracy}")
-
-        train_dataloader, test_dataloader = train_test_loaders(dataset=dataset,
-                                                    batch_size=batch_size,
-                                                    test_size=0.1,
-                                                    verbose=verbose,
-                                                    seed=0)
         
+        train_loss, test_loss = [], []
 
         for i, (X, Y) in enumerate(train_dataloader):
             X = X.to(DEVICE)
 
-            crop = random_cropping2(False)
+            crop = random_cropping(False)
 
             signal_aug_1, signal_aug_2 = crop(X)
 
@@ -309,17 +301,16 @@ def train(classifier,
             loss.backward()
 
             torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
-
-            train_loss_save[epoch, i] = loss.item()
             
             optimizer.step()
 
-            if (i+1) == train_batches: break
+            train_loss.append(loss.item())
         
+
         for i, (X, y) in enumerate(test_dataloader):
             X = X.to(DEVICE)
 
-            crop = random_cropping2(False)
+            crop = random_cropping(False)
 
             signal_aug_1, signal_aug_2 = crop(X)
 
@@ -328,28 +319,22 @@ def train(classifier,
 
             loss = hierarchical_contrastive_loss(z1,  z2)
 
-            test_loss_save[epoch, i] = loss.item()
+            test_loss.append(loss.item())
 
-            if (i+1) == test_batches: break
-    
+        
+        train_loss_save[epoch] = np.mean(train_loss)
+        test_loss_save[epoch] = np.mean(test_loss)
 
-
-    train_dataloader, test_dataloader = train_test_loaders(dataset=dataset,
-                                                    batch_size=batch_size,
-                                                    test_size=0.1,
-                                                    verbose=verbose,
-                                                    seed=0)
 
 
     train_accuracy, test_accuracy = classifier_train(classifier, 
                                                         model, 
                                                         train_loader=train_dataloader, 
                                                         test_loader=test_dataloader, 
-                                                        device=DEVICE,
-                                                        num_batches=ts_num_batches)
+                                                        device=DEVICE)
 
-    train_accuracy_save[epoch+1] = train_accuracy
-    test_accuracy_save[epoch+1] = test_accuracy
+    train_accuracy_save[-1] = train_accuracy
+    test_accuracy_save[-1] = test_accuracy
 
     print(f"Train accuracy {train_accuracy}. Test accuracy {test_accuracy}")
     print('Finished training TS2VEC')
@@ -364,21 +349,4 @@ def train(classifier,
 
 
 if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-
-    from dataloader import PTB_XL
-    dataset = PTB_XL()
-
-    loss_save =   train('logistic',
-                dataset,
-                verbose=True, 
-                 output_dim=256, 
-                 batch_size=3, 
-                 n_epochs=20,
-                 class_points=10)
-
-    loss_mean = np.mean(loss_save, axis=1)
-
-    plt.plot(loss_mean)
-    plt.title('loss over epochs')
-    plt.show()
+    pass
