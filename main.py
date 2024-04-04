@@ -58,7 +58,7 @@ if args.dataset == 'PTB_XL':
 if args.model.lower() == 'ts2vec':
     from code.scripts.TS2VEC import train
 
-    train_loss_save, test_loss_save, train_accuracy_save, test_accuracy_save = train(classifier=args.classifier,
+    train_loss_save, test_loss_save, train_accuracy_save, test_accuracy_save, base = train(classifier=args.classifier,
                                                                                     dataset=dataset,
                                                                                     output_dim=args.output_dim,
                                                                                     n_epochs=args.n_epochs,
@@ -76,6 +76,7 @@ if args.model.lower() == 'ts2vec':
     np.save(os.path.join(save_path, 'test_ts2vec_loss'), test_loss_save)
     np.save(os.path.join(save_path, 'train_accuracy_save'), train_accuracy_save)
     np.save(os.path.join(save_path, 'test_accuracy_save'), test_accuracy_save)
+    np.save(os.path.join(save_path, 'baseline'), np.ones(len(train_loss_save)) * base)
 
 
     # plt.plot(loss_mean)

@@ -28,7 +28,22 @@ def train_test_dataset(dataset, test_proportion, train_size, test_size, verbose=
     return train_dataset, test_dataset
 
 def baseline(train_dataset, test_dataset):
-    train_dataset
+
+    train = np.zeros(len(train_dataset))
+    test = np.zeros(len(test_dataset))
+    for i in range(len(train_dataset)):
+        train[i] = train_dataset[i][1]
+    for i in range(len(test_dataset)):
+        test[i] = test_dataset[i][1]
+
+    test1, test2 = np.unique(train, return_counts=True)
+
+    index = np.argmax(test2)
+
+    baseline = np.mean(test1[index] == test)
+
+    return baseline
+        
 
 
 class random_cropping:
