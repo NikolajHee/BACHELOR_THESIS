@@ -8,6 +8,7 @@ from torch import nn
 import warnings
 import numpy as np
 from code.scripts.classifier import classifier_train
+from code.scripts.clustering import tsne
 import torch
 from torch import nn
 import torch.nn.functional as F
@@ -274,17 +275,27 @@ def train(classifier,
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
         test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
         
+        classifier_eval = False
+        if classifier_eval:
+            train_accuracy, test_accuracy = classifier_train(classifier, 
+                                                            model, 
+                                                            train_loader=train_dataloader, 
+                                                            test_loader=test_dataloader, 
+                                                            device=DEVICE)
+            
+        
+        t_sne = True
+        if t_sne:
+            tsne(model,
+                 train_loader=train_dataloader,
+                 test_loader=test_dataloader,
+                 device=DEVICE,
+                 wandb=wandb)
 
-        train_accuracy, test_accuracy = classifier_train(classifier, 
-                                                         model, 
-                                                         train_loader=train_dataloader, 
-                                                         test_loader=test_dataloader, 
-                                                         device=DEVICE)
-
-        train_accuracy_save[epoch] = train_accuracy
-        test_accuracy_save[epoch] = test_accuracy
-
-        print(f"Train accuracy {train_accuracy}. Test accuracy {test_accuracy}. Base {base}.")
+        if classifier_eval:
+            train_accuracy_save[epoch] = train_accuracy
+            test_accuracy_save[epoch] = test_accuracy
+            print(f"Train accuracy {train_accuracy}. Test accuracy {test_accuracy}. Base {base}.")
         
         train_loss_list, test_loss_list = [], []
 
@@ -332,22 +343,23 @@ def train(classifier,
 
         if wandb is not None:
             wandb.log({"tsloss/train_loss": train_loss, "tsloss/test_loss": test_loss})
-            wandb.log({"accuracy/train_accuracy": train_accuracy, "accuracy/test_accuracy": test_accuracy})
+            if classifier_eval:
+                wandb.log({"accuracy/train_accuracy": train_accuracy, "accuracy/test_accuracy": test_accuracy})
 
 
+    if classifier_eval:
+        train_accuracy, test_accuracy = classifier_train(classifier, 
+                                                            model, 
+                                                            train_loader=train_dataloader, 
+                                                            test_loader=test_dataloader, 
+                                                            device=DEVICE)
 
-    train_accuracy, test_accuracy = classifier_train(classifier, 
-                                                        model, 
-                                                        train_loader=train_dataloader, 
-                                                        test_loader=test_dataloader, 
-                                                        device=DEVICE)
+    if wandb is not None and classifier_eval: wandb.log({"accuracy/train_accuracy": train_accuracy, "accuracy/test_accuracy": test_accuracy})
+    if classifier_eval:
+        train_accuracy_save[-1] = train_accuracy
+        test_accuracy_save[-1] = test_accuracy
 
-    if wandb is not None: wandb.log({"accuracy/train_accuracy": train_accuracy, "accuracy/test_accuracy": test_accuracy})
-
-    train_accuracy_save[-1] = train_accuracy
-    test_accuracy_save[-1] = test_accuracy
-
-    print(f"Train accuracy {train_accuracy}. Test accuracy {test_accuracy}. Base {base}.")
+        print(f"Train accuracy {train_accuracy}. Test accuracy {test_accuracy}. Base {base}.")
     print('Finished training TS2VEC')
 
     return train_loss_save, test_loss_save, train_accuracy_save, test_accuracy_save, base

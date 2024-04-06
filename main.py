@@ -46,9 +46,6 @@ arguments = vars(args)
 
 
 def main():
-    wandb.init(project="BACHELOR_THESIS")
-        
-
     config = wandb.config
     # save_path = args.save_file
     # # add current date and time
@@ -107,8 +104,9 @@ def main():
         # plt.close()
 
 
+if any([len(i) > 1 for i in arguments.values() if type(i) == list]):
 
-if any([type(i) == list for i in arguments.values()]):
+    raise NotImplementedError()
 
     sweep_configuration = {
         "method": "grid",
@@ -122,4 +120,17 @@ if any([type(i) == list for i in arguments.values()]):
     sweep_id = wandb.sweep(sweep=sweep_configuration, project="BACHELOR-THESIS")
 
     wandb.agent(sweep_id, function=main, count=10)
+else:
+    save = {}
+    for (i,j) in arguments.items():
+        if type(j) == list:
+            save[i] = j[0]
+        else:
+            save[i] = j
+
+
+    wandb.init(project="BACHELOR_THESIS",
+               config=save)
+    
+    main()
 
