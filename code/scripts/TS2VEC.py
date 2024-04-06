@@ -241,7 +241,8 @@ def train(classifier,
           grad_clip=0.01,
           verbose=False,
           N_train=1000,
-          N_test=100):
+          N_test=100,
+          wandb=None):
 
     from code.scripts.utils import train_test_dataset
     train_dataset, test_dataset = train_test_dataset(dataset=dataset,
@@ -285,7 +286,7 @@ def train(classifier,
 
         print(f"Train accuracy {train_accuracy}. Test accuracy {test_accuracy}. Base {base}.")
         
-        train_loss, test_loss = [], []
+        train_loss_list, test_loss_list = [], []
 
         for i, (X, Y) in enumerate(train_dataloader):
             X = X.to(DEVICE)
@@ -299,16 +300,16 @@ def train(classifier,
             z1 = model.forward(signal_aug_1.float())
             z2 = model.forward(signal_aug_2.float())
 
-            loss = hierarchical_contrastive_loss(z1,  z2)
-            if i%1==0: print(f"Epoch: {epoch}. Iter: {i}. HierLoss: {loss}.")
+            train_loss = hierarchical_contrastive_loss(z1,  z2)
+            if i%1==0: print(f"Epoch: {epoch}. Iter: {i}. HierLoss: {train_loss}.")
 
-            loss.backward()
+            train_loss.backward()
 
             torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
             
             optimizer.step()
 
-            train_loss.append(loss.item())
+            train_loss_list.append(train_loss.item())
         
 
         for i, (X, y) in enumerate(test_dataloader):
@@ -321,13 +322,17 @@ def train(classifier,
             z1 = model.forward(signal_aug_1.float())
             z2 = model.forward(signal_aug_2.float())
 
-            loss = hierarchical_contrastive_loss(z1,  z2)
+            test_loss = hierarchical_contrastive_loss(z1,  z2)
 
-            test_loss.append(loss.item())
+            test_loss_list.append(test_loss.item())
 
         
-        train_loss_save[epoch] = np.mean(train_loss)
-        test_loss_save[epoch] = np.mean(test_loss)
+        train_loss_save[epoch] = np.mean(train_loss_list)
+        test_loss_save[epoch] = np.mean(test_loss_list)
+
+        if wandb is not None:
+            wandb.log({"tsloss/train_loss": train_loss, "tsloss/test_loss": test_loss})
+            wandb.log({"accuracy/train_accuracy": train_accuracy, "accuracy/test_accuracy": test_accuracy})
 
 
 
@@ -336,6 +341,8 @@ def train(classifier,
                                                         train_loader=train_dataloader, 
                                                         test_loader=test_dataloader, 
                                                         device=DEVICE)
+
+    if wandb is not None: wandb.log({"accuracy/train_accuracy": train_accuracy, "accuracy/test_accuracy": test_accuracy})
 
     train_accuracy_save[-1] = train_accuracy
     test_accuracy_save[-1] = test_accuracy
