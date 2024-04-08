@@ -25,7 +25,7 @@ class PTB_XL(Dataset):
         sampling_rate: amounts of sample per second
         """
         if data_path is None:
-            with open('BACHELOR_THESIS/save_path.pkl', 'rb') as fp:
+            with open('save_path.pkl', 'rb') as fp:
                 data_path = pickle.load(fp)['data_path']
 
         self.data_path = data_path
