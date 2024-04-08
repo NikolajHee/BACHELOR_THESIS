@@ -31,7 +31,7 @@ parser.add_argument('-ne', '--n_epochs', default=200, type=int, nargs='+')
 parser.add_argument('-lr', '--learning_rate', default=0.001, type=float, nargs='+')
 parser.add_argument('-p', default=0.5, type=float, nargs='+')
 parser.add_argument('-id', '--input_dim', default=12, type=int)
-parser.add_argument('-gc', '--grad_clip', default=0.01, type=float, nargs='+')
+parser.add_argument('-gc', '--grad_clip', default=None, type=float, nargs='+')
 parser.add_argument('-v', '--verbose', action='store_true')
 parser.add_argument('--N_train', default=10, type=int, nargs='+')
 parser.add_argument('--N_test', default=10, type=int, nargs='+')
@@ -121,7 +121,7 @@ if any([len(i) > 1 for i in arguments.values() if type(i) == list]):
         },
     }
 
-    sweep_id = wandb.sweep(sweep=sweep_configuration, project="BACHELOR-THESIS")
+    sweep_id = wandb.sweep(sweep=sweep_configuration, project="BACHELOR_THESIS")
 
     wandb.agent(sweep_id, function=main, count=10)
 else:

@@ -15,6 +15,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from utils import baseline
 import os
+from tqdm import tqdm
 
 DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -297,12 +298,14 @@ def train(classifier,
           learning_rate=0.001,
           p=0.5,
           input_dim=12,
-          grad_clip=0.01,
+          grad_clip=None,
           verbose=False,
           N_train=1000,
           N_test=100,
           wandb=None,
           train_path=None):
+    
+    best_test_error = np.inf
 
     from utils import train_test_dataset
     train_dataset, test_dataset = train_test_dataset(dataset=dataset,
@@ -342,7 +345,7 @@ def train(classifier,
         train_loss_list, test_loss_list = [], []
         print(f"Epoch: {epoch}")
 
-        for i, (X, Y) in enumerate(train_dataloader):
+        for i, (X, Y) in tqdm(enumerate(train_dataloader)):
             X = X.to(DEVICE)
 
             crop = random_cropping(False)
@@ -360,11 +363,12 @@ def train(classifier,
             train_loss = hierarchical_contrastive_loss(z1[:, -crop_l:],  z2[:,:crop_l])
 
 
-            if i%1==0: print(f"Train loss: {train_loss}.")
+            #if i%20==0: print(f"Train loss: {train_loss}.")
 
             train_loss.backward()
-
-            #torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
+            
+            if grad_clip is not None:
+                torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
             
             optimizer.step()
 
@@ -372,7 +376,7 @@ def train(classifier,
         
         model.test = True
 
-        for i, (X, y) in enumerate(test_dataloader):
+        for i, (X, y) in tqdm(enumerate(test_dataloader)):
             X = X.to(DEVICE)
 
             crop = random_cropping(False)
@@ -387,11 +391,13 @@ def train(classifier,
 
             test_loss = hierarchical_contrastive_loss(z1[:, -crop_l:],  z2[:,:crop_l])
 
-            if i%1==0: print(f"Test loss: {test_loss}.")
+            #if i%1==0: print(f"Test loss: {test_loss}.")
 
             test_loss_list.append(test_loss.item())
 
-                
+            
+        print(f"Epoch {epoch}. Train loss {np.mean(train_loss_list)}. Test loss {np.mean(test_loss_list)}.")
+        
         classifier_eval = False
 
         model.test = True
@@ -425,9 +431,16 @@ def train(classifier,
             wandb.log({"tsloss/train_loss": train_loss, "tsloss/test_loss": test_loss})
             if classifier_eval:
                 wandb.log({"accuracy/train_accuracy": train_accuracy, "accuracy/test_accuracy": test_accuracy})
-        
+
+
+        # save the actual model
         torch.save(model.state_dict(), os.path.join(train_path, 'model.pt'))
 
+
+        # save the best model so far 
+        if best_test_error > np.mean(test_loss_list):
+            best_test_error = np.mean(test_loss_list)
+            torch.save(model.state_dict(), os.path.join(train_path, 'best_model.pt'))
 
 
     print('Finished training TS2VEC')
