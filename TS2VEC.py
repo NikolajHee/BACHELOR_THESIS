@@ -14,7 +14,7 @@ from torch import nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from utils import baseline
-
+import os
 
 DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -301,7 +301,8 @@ def train(classifier,
           verbose=False,
           N_train=1000,
           N_test=100,
-          wandb=None):
+          wandb=None,
+          train_path=None):
 
     from utils import train_test_dataset
     train_dataset, test_dataset = train_test_dataset(dataset=dataset,
@@ -424,13 +425,15 @@ def train(classifier,
             wandb.log({"tsloss/train_loss": train_loss, "tsloss/test_loss": test_loss})
             if classifier_eval:
                 wandb.log({"accuracy/train_accuracy": train_accuracy, "accuracy/test_accuracy": test_accuracy})
+        
+        torch.save(model.state_dict(), os.path.join(train_path, 'model.pt'))
 
 
 
     print('Finished training TS2VEC')
     
 
-    return train_loss_save, test_loss_save, train_accuracy_save, test_accuracy_save, base, model
+    return train_loss_save, test_loss_save, train_accuracy_save, test_accuracy_save, base
 
 
 

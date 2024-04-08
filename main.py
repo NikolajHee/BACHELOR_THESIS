@@ -75,7 +75,7 @@ def main():
     if config.model.lower() == 'ts2vec':
         from TS2VEC import train
 
-        train_loss_save, test_loss_save, train_accuracy_save, test_accuracy_save, base, model = train(classifier=config.classifier,
+        train_loss_save, test_loss_save, train_accuracy_save, test_accuracy_save, base = train(classifier=config.classifier,
                                                                                                 dataset=dataset,
                                                                                                 hidden_dim=config.hidden_dim,
                                                                                                 output_dim=config.output_dim,
@@ -88,7 +88,8 @@ def main():
                                                                                                 verbose=config.verbose,
                                                                                                 N_train=config.N_train,
                                                                                                 N_test=config.N_test,
-                                                                                                wandb=wandb)
+                                                                                                wandb=wandb,
+                                                                                                train_path=save_path)
         
 
         # np.save(os.path.join(save_path, 'train_ts2vec_loss'), train_loss_save)
@@ -96,7 +97,7 @@ def main():
         # np.save(os.path.join(save_path, 'train_accuracy_save'), train_accuracy_save)
         # np.save(os.path.join(save_path, 'test_accuracy_save'), test_accuracy_save)
         # np.save(os.path.join(save_path, 'baseline'), np.ones(len(train_accuracy_save)) * base)
-        torch.save(model.state_dict(), 'model.pt')
+        
 
         # plt.plot(loss_mean)
         # plt.savefig(save_path + '/first_loss_function.png')
