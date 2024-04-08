@@ -22,6 +22,7 @@ def tsne(H,
 
     
     for i, (X, y) in tqdm(enumerate(train_loader)):
+        print(X)
         z = H(X.to(device).float())
 
         # Maxpooling is inspried by the TS2VEC framework for classification
@@ -35,7 +36,6 @@ def tsne(H,
         Z_train[i*batch_size:(i+1)*batch_size] = z.reshape(batch_size, H.output_dim)
         Y_train[i*batch_size:(i+1)*batch_size] = y.reshape(batch_size)
 
-    
     test1 = TSNE(n_components=2).fit_transform(Z_train)
 
     fig, ax = plt.subplots()
@@ -45,8 +45,7 @@ def tsne(H,
         index = Y_train == _class
         ax.plot(test1[index,0], test1[index,1], '.', label = str(_class))#, c=Y_test)
      
-
-    ax.plot(test1[:,0], test1[:,1])#, c=Y_train)
+    #plt.legend()
     wandb.log({"train_t_sne": fig})
 
     for i, (X, y) in tqdm(enumerate(test_loader)):
@@ -61,7 +60,7 @@ def tsne(H,
         Z_test[i*batch_size:(i+1)*batch_size] = z.reshape(batch_size, H.output_dim)
         Y_test[i*batch_size:(i+1)*batch_size] = y.reshape(batch_size)
 
-
+    
     test2 = TSNE(n_components=2).fit_transform(Z_test)
 
     fig, ax = plt.subplots()
@@ -71,7 +70,7 @@ def tsne(H,
         index = Y_test == _class
         ax.plot(test2[index,0], test2[index,1], '.', label = str(_class))#, c=Y_test)
 
-    plt.legend()
+    #plt.legend()
         
 
     wandb.log({"test_t_sne": fig})

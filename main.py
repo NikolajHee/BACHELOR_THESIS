@@ -4,7 +4,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
-from code.scripts.utils import save_parameters
+from utils import save_parameters
 import wandb
 
 
@@ -23,9 +23,10 @@ parser.add_argument('model')
 parser.add_argument('--dataset', default='PTB_XL') 
 parser.add_argument('-sf', '--save_file', default='unnamed')
 parser.add_argument('-c', '--classifier', default='logistic', choices=['logistic', 'svc'], nargs='+')
-parser.add_argument('-od', '--output_dim', default=16, type=int, nargs='+')
-parser.add_argument('-bs', '--batch_size', default=2, type=int, nargs='+')
-parser.add_argument('-ne', '--n_epochs', default=4, type=int, nargs='+')
+parser.add_argument('-hd', '--hidden_dim', default=64, type=int, nargs='+')
+parser.add_argument('-od', '--output_dim', default=320, type=int, nargs='+')
+parser.add_argument('-bs', '--batch_size', default=8, type=int, nargs='+')
+parser.add_argument('-ne', '--n_epochs', default=200, type=int, nargs='+')
 parser.add_argument('-lr', '--learning_rate', default=0.001, type=float, nargs='+')
 parser.add_argument('-p', default=0.5, type=float, nargs='+')
 parser.add_argument('-id', '--input_dim', default=12, type=int)
@@ -34,6 +35,8 @@ parser.add_argument('-v', '--verbose', action='store_true')
 parser.add_argument('--N_train', default=10, type=int, nargs='+')
 parser.add_argument('--N_test', default=10, type=int, nargs='+')
 
+
+debug_mode = False
 
 args = parser.parse_args()
 
@@ -66,12 +69,12 @@ def main():
 
 
     if config.dataset == 'PTB_XL':
-        from code.scripts.dataloader import PTB_XL
+        from dataloader import PTB_XL
         dataset = PTB_XL()
 
 
     if config.model.lower() == 'ts2vec':
-        from code.scripts.TS2VEC import train
+        from TS2VEC import train
 
         train_loss_save, test_loss_save, train_accuracy_save, test_accuracy_save, base = train(classifier=config.classifier,
                                                                                         dataset=dataset,
@@ -106,7 +109,7 @@ def main():
 
 if any([len(i) > 1 for i in arguments.values() if type(i) == list]):
 
-    raise NotImplementedError()
+
 
     sweep_configuration = {
         "method": "grid",

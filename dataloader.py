@@ -25,7 +25,7 @@ class PTB_XL(Dataset):
         sampling_rate: amounts of sample per second
         """
         if data_path is None:
-            with open('code/scripts/save_path.pkl', 'rb') as fp:
+            with open('BACHELOR_THESIS/save_path.pkl', 'rb') as fp:
                 data_path = pickle.load(fp)['data_path']
 
         self.data_path = data_path
@@ -56,18 +56,29 @@ class PTB_XL(Dataset):
         return len(self.paths)
 
     def __getitem__(self, idx):
-        image_path = os.path.join(self.data_path, self.paths[idx])
-        
-        signal, meta = wfdb.rdsamp(image_path)
+        if type(idx) is slice:
+            #print([path for path in self.paths[idx]])
+            signal = np.stack([wfdb.rdsamp(os.path.join(self.data_path, path))[0] for path in self.paths[idx]])
+            label = self.df.binary_label[idx]
+        elif type(idx) is tuple:
+            signal = np.stack([wfdb.rdsamp(os.path.join(self.data_path, self.paths[i]))[0] for i in idx])
+            label = [self.df.binary_label[i] for i in idx]
+        else:
+            image_path = os.path.join(self.data_path, self.paths[idx])
+            signal = wfdb.rdsamp(image_path)[0]
+            label = self.df.binary_label[idx]
 
-        label = self.df.binary_label[idx]
+        
 
         return signal, label
 
 
 if __name__ == '__main__':        
-    pass
-    
+    data = PTB_XL()
+
+    print(data[0])
+
+    print(data[1,10,20])
 
 
     
