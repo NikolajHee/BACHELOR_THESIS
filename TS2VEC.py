@@ -144,12 +144,63 @@ class dilated_CNN_layer(nn.Module):
         return self.CNN(x)
 
 
+class SamePadConv(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, dilation=1, groups=1):
+        super().__init__()
+        self.receptive_field = (kernel_size - 1) * dilation + 1
+        padding = self.receptive_field // 2
+        self.conv = nn.Conv1d(
+            in_channels, out_channels, kernel_size,
+            padding=padding,
+            dilation=dilation,
+            groups=groups
+        )
+        self.remove = 1 if self.receptive_field % 2 == 0 else 0
+        
+    def forward(self, x):
+        out = self.conv(x)
+        if self.remove > 0:
+            out = out[:, :, : -self.remove]
+        return out
+    
+class ConvBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, dilation, final=False):
+        super().__init__()
+        self.conv1 = SamePadConv(in_channels, out_channels, kernel_size, dilation=dilation)
+        self.conv2 = SamePadConv(out_channels, out_channels, kernel_size, dilation=dilation)
+        self.projector = nn.Conv1d(in_channels, out_channels, 1) if in_channels != out_channels or final else None
+    
+    def forward(self, x):
+        residual = x if self.projector is None else self.projector(x)
+        x = F.gelu(x)
+        x = self.conv1(x)
+        x = F.gelu(x)
+        x = self.conv2(x)
+        return x + residual
+
+class DilatedConvEncoder(nn.Module):
+    def __init__(self, in_channels, channels, kernel_size):
+        super().__init__()
+        self.net = nn.Sequential(*[
+            ConvBlock(
+                channels[i-1] if i > 0 else in_channels,
+                channels[i],
+                kernel_size=kernel_size,
+                dilation=2**i,
+                final=(i == len(channels)-1)
+            )
+            for i in range(len(channels))
+        ])
+        
+    def forward(self, x):
+        return self.net(x)
 
 
 class TS2VEC(nn.Module):
     def __init__(self, 
                  input_dim, 
                  output_dim=320, # Same as ts2vec 
+                 hidden_dim=64,
                  p = 0.5, 
                  device = 'cpu', 
                  verbose=False):
@@ -157,13 +208,15 @@ class TS2VEC(nn.Module):
         super().__init__()
         self.output_dim = output_dim
         self.input_project_layer = input_projection_layer(input_dim=input_dim,
-                                                            output_dim=output_dim,
+                                                            output_dim=hidden_dim,
                                                             device = device)
         
         self.time_masking_layer = timestamp_masking_layer(verbose=verbose)
 
 
-        self.dilated_cnn_layer = dilated_CNN_layer(dim=output_dim)
+        #self.dilated_cnn_layer = dilated_CNN_layer(dim=output_dim)
+
+        self.dilated_cnn_layer = DilatedConvEncoder(in_channels=64, channels=[64]*10 + [output_dim], kernel_size=3)
 
         self.p = p
         self.test = False
@@ -237,6 +290,7 @@ def temporal_contrastive_loss(z1, z2):
 
 def train(classifier,
           dataset,
+          hidden_dim=64,
           output_dim=256, 
           n_epochs=30, 
           batch_size=10,
@@ -260,11 +314,14 @@ def train(classifier,
     base = baseline(train_dataset=train_dataset,
                     test_dataset=test_dataset)
 
-    model = TS2VEC(input_dim=input_dim, 
+    model_ = TS2VEC(input_dim=input_dim, 
                    output_dim=output_dim, 
+                   hidden_dim=hidden_dim,
                    p=p, 
                    device=DEVICE, 
                    verbose=verbose).to(DEVICE)
+    
+    model = torch.optim.swa_utils.AveragedModel(model_)
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
     
@@ -371,8 +428,9 @@ def train(classifier,
 
 
     print('Finished training TS2VEC')
+    
 
-    return train_loss_save, test_loss_save, train_accuracy_save, test_accuracy_save, base
+    return train_loss_save, test_loss_save, train_accuracy_save, test_accuracy_save, base, model
 
 
 

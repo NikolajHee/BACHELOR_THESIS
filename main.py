@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 from utils import save_parameters
 import wandb
+import torch
 
 
 
@@ -50,13 +51,11 @@ arguments = vars(args)
 
 def main():
     config = wandb.config
-    # save_path = args.save_file
+    save_path = config.save_file
     # # add current date and time
-    # now = datetime.now()
 
-    # dt_string = now.strftime("%d_%m_%Y/%H_%M_%S")
 
-    # save_path = os.path.join(save_path, dt_string)
+    save_path = os.path.join(save_path, dt_string)
 
 
     # if not os.path.exists(save_path):
@@ -76,19 +75,20 @@ def main():
     if config.model.lower() == 'ts2vec':
         from TS2VEC import train
 
-        train_loss_save, test_loss_save, train_accuracy_save, test_accuracy_save, base = train(classifier=config.classifier,
-                                                                                        dataset=dataset,
-                                                                                        output_dim=config.output_dim,
-                                                                                        n_epochs=config.n_epochs,
-                                                                                        batch_size=config.batch_size,
-                                                                                        learning_rate=config.learning_rate,
-                                                                                        p=config.p,
-                                                                                        input_dim=config.input_dim,
-                                                                                        grad_clip=config.grad_clip,
-                                                                                        verbose=config.verbose,
-                                                                                        N_train=config.N_train,
-                                                                                        N_test=config.N_test,
-                                                                                        wandb=wandb)
+        train_loss_save, test_loss_save, train_accuracy_save, test_accuracy_save, base, model = train(classifier=config.classifier,
+                                                                                                dataset=dataset,
+                                                                                                hidden_dim=config.hidden_dim,
+                                                                                                output_dim=config.output_dim,
+                                                                                                n_epochs=config.n_epochs,
+                                                                                                batch_size=config.batch_size,
+                                                                                                learning_rate=config.learning_rate,
+                                                                                                p=config.p,
+                                                                                                input_dim=config.input_dim,
+                                                                                                grad_clip=config.grad_clip,
+                                                                                                verbose=config.verbose,
+                                                                                                N_train=config.N_train,
+                                                                                                N_test=config.N_test,
+                                                                                                wandb=wandb)
         
 
         # np.save(os.path.join(save_path, 'train_ts2vec_loss'), train_loss_save)
@@ -96,7 +96,7 @@ def main():
         # np.save(os.path.join(save_path, 'train_accuracy_save'), train_accuracy_save)
         # np.save(os.path.join(save_path, 'test_accuracy_save'), test_accuracy_save)
         # np.save(os.path.join(save_path, 'baseline'), np.ones(len(train_accuracy_save)) * base)
-
+        torch.save(model.state_dict(), 'model.pt')
 
         # plt.plot(loss_mean)
         # plt.savefig(save_path + '/first_loss_function.png')
@@ -130,9 +130,12 @@ else:
             save[i] = j[0]
         else:
             save[i] = j
+    now = datetime.now()
 
+    dt_string = now.strftime("(%d_%m_%Y)_(%H_%M_%S)")
 
     wandb.init(project="BACHELOR_THESIS",
+               name=dt_string,
                config=save)
     
     main()
