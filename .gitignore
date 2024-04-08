@@ -1,3 +1,4 @@
 code/data*
 save_path.pkl
 local_*
+*__pycache__/
