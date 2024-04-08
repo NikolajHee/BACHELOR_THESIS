@@ -58,8 +58,8 @@ def main():
     save_path = os.path.join(save_path, dt_string)
 
 
-    # if not os.path.exists(save_path):
-    #     os.makedirs(save_path)
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
 
     # save_parameters(save_path, vars(args))
 
