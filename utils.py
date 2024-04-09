@@ -16,14 +16,17 @@ def save_parameters(save_path, dictionary):
 
 
 
-def train_test_dataset(dataset, test_proportion, train_size, test_size, verbose=False, seed=None, ):
+def train_test_dataset(dataset, test_proportion, train_size=None, test_size=None, verbose=False, seed=None, ):
 
     if seed is not None:
         np.random.seed(seed)
     train_indices, test_indices = train_test_split(np.arange(0, len(dataset)), test_size=test_proportion)
-
-    train_dataset = Subset(dataset, train_indices[:train_size])
-    test_dataset = Subset(dataset, test_indices[:test_size])
+    if (train_size is None) and (test_size is None):
+        train_dataset = Subset(dataset, train_indices)
+        test_dataset = Subset(dataset, test_indices)
+    else:
+        train_dataset = Subset(dataset, train_indices[:train_size])
+        test_dataset = Subset(dataset, test_indices[:test_size])
 
     return train_dataset, test_dataset
 
