@@ -99,7 +99,7 @@ if __name__ == '__main__':
     model = torch.optim.swa_utils.AveragedModel(model_)
 
     PATH = '/Users/nikolajhertz/Desktop/GIT/BACHELOR_THESIS/results/maybe_works/(08_04_2024)_(21_03_13)/best_model.pt'
-    
+    PATH = 'results/maybe_works/(08_04_2024)_(21_03_13)/best_model.pt'
 
     #print([test[0] for test in test_])
     H = model.load_state_dict(torch.load(PATH))
