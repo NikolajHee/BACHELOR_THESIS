@@ -33,8 +33,8 @@ parser.add_argument('-p', default=0.5, type=float, nargs='+')
 parser.add_argument('-id', '--input_dim', default=12, type=int)
 parser.add_argument('-gc', '--grad_clip', default=None, type=float, nargs='+')
 parser.add_argument('-v', '--verbose', action='store_true')
-parser.add_argument('--N_train', default=10, type=int, nargs='+')
-parser.add_argument('--N_test', default=10, type=int, nargs='+')
+parser.add_argument('--N_train', default=None, type=int, nargs='+')
+parser.add_argument('--N_test', default=None, type=int, nargs='+')
 
 
 debug_mode = False
@@ -70,6 +70,10 @@ def main():
     if config.dataset == 'PTB_XL':
         from dataloader import PTB_XL
         dataset = PTB_XL()
+    elif config.dataset == 'ElectricDevices':
+        from dataloader import UEA
+        dataset = UEA(config.dataset)
+        print(dataset)
 
 
     if config.model.lower() == 'ts2vec':

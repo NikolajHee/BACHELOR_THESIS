@@ -13,6 +13,7 @@ import numpy as np
 from torch.utils.data import DataLoader, Subset
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
+from aeon.datasets import load_classification
 
 
 class PTB_XL(Dataset):
@@ -96,13 +97,28 @@ class PTB_XL(Dataset):
         return signal, label
 
 
+
+
+class UEA(Dataset):
+    def __init__(self, name):
+        self.X, self.y = load_classification("ElectricDevices")
+    
+    def __len__(self):
+        return len(self.y)
+    
+    def __getitem__(self, idx):
+        return self.X[idx].T, self.y[idx]
+
 if __name__ == '__main__':        
-    data = PTB_XL()
+    #pidata = PTB_XL()
 
-    print(data[0])
+    #print(data[0])
 
-    print(data[1,10,20])
+    #print(data[1,10,20])
 
+    from aeon.datasets import load_classification
+    X, y = load_classification("ElectricDevices")
+    print(" Shape of X = ", X.shape)
 
     
 

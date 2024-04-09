@@ -309,11 +309,12 @@ def train(classifier,
 
     from utils import train_test_dataset
     train_dataset, test_dataset = train_test_dataset(dataset=dataset,
-                                                        test_proportion=0.1,
+                                                        test_proportion=0.3,
                                                         train_size=N_train,
                                                         test_size=N_test,
                                                         verbose=verbose,
                                                         seed=0)
+    #print(len(train_dataset), len(test_dataset))
 
     base = baseline(train_dataset=train_dataset,
                     test_dataset=test_dataset)
@@ -350,6 +351,7 @@ def train(classifier,
 
             crop = random_cropping(False)
 
+            #print(X.shape, type(X), X)
             signal_aug_1, signal_aug_2, crop_l = crop(X)
             
             optimizer.zero_grad()
