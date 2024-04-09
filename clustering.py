@@ -23,7 +23,7 @@ def tsne(H,
 
     
     for i, (X, y) in tqdm(enumerate(train_loader)):
-        print(X)
+        #print(X)
         z = H.forward(X.to(device).float())
 
         # Maxpooling is inspried by the TS2VEC framework for classification
