@@ -89,10 +89,17 @@ if __name__ == '__main__':
 
 
     from TS2VEC import TS2VEC
-    model = TS2VEC(input_dim=12, hidden_dim=64, output_dim=320)
+    model_ = TS2VEC(input_dim=12, 
+                   output_dim=320, 
+                   hidden_dim=64,
+                   p=0.5, 
+                   device=DEVICE, 
+                   verbose=True).to(DEVICE)
+    
+    model = torch.optim.swa_utils.AveragedModel(model_)
 
     PATH = '/Users/nikolajhertz/Desktop/GIT/BACHELOR_THESIS/results/maybe_works/(08_04_2024)_(21_03_13)/best_model.pt'
-
+    
 
     #print([test[0] for test in test_])
     H = model.load_state_dict(torch.load(PATH))
