@@ -125,6 +125,6 @@ if __name__ == '__main__':
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
     
-    tsne(H, train_dataloader, test_dataloader, output_dim=320, DEVICE)
+    tsne(H, train_dataloader, test_dataloader, output_dim=320, device=DEVICE)
     
 
