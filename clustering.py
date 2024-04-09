@@ -103,7 +103,7 @@ if __name__ == '__main__':
     PATH = 'results/maybe_works/(08_04_2024)_(21_03_13)/best_model.pt'
 
     #print([test[0] for test in test_])
-    H = model.load_state_dict(torch.load(PATH))
+    #H = model.load_state_dict(torch.load(PATH))
 
     from dataloader import PTB_XL
     dataset = PTB_XL()
@@ -125,6 +125,6 @@ if __name__ == '__main__':
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
     
-    tsne(H, train_dataloader, test_dataloader, output_dim=320, device=DEVICE)
+    tsne(model, train_dataloader, test_dataloader, output_dim=320, device=DEVICE)
     
 
