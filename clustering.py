@@ -92,7 +92,7 @@ if __name__ == '__main__':
     model = TS2VEC(input_dim=12, hidden_dim=64, output_dim=320)
 
     PATH = '/Users/nikolajhertz/Desktop/GIT/BACHELOR_THESIS/results/maybe_works/(08_04_2024)_(21_03_13)/best_model.pt'
-
+    PATH = 'results/maybe_works/(08_04_2024)_(21_03_13)/best_model.pt'
 
     #print([test[0] for test in test_])
     H = model.load_state_dict(torch.load(PATH))
