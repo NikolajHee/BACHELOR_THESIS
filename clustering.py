@@ -9,15 +9,16 @@ import torch
 def tsne(H, 
          train_loader,
          test_loader,
+         output_dim,
          device):
 
 
     batch_size = train_loader.batch_size
     train_batches, test_batches = len(train_loader), len(test_loader)
 
-    Z_train = np.zeros((batch_size * train_batches, H.output_dim))
+    Z_train = np.zeros((batch_size * train_batches, output_dim))
     Y_train = np.zeros((batch_size * train_batches))
-    Z_test= np.zeros((batch_size * test_batches, H.output_dim))
+    Z_test= np.zeros((batch_size * test_batches, output_dim))
     Y_test = np.zeros(batch_size * test_batches)
 
     
@@ -33,7 +34,7 @@ def tsne(H,
 
         y = y.numpy()
 
-        Z_train[i*batch_size:(i+1)*batch_size] = z.reshape(batch_size, H.output_dim)
+        Z_train[i*batch_size:(i+1)*batch_size] = z.reshape(batch_size, output_dim)
         Y_train[i*batch_size:(i+1)*batch_size] = y.reshape(batch_size)
 
     test1 = TSNE(n_components=2).fit_transform(Z_train)
@@ -60,7 +61,7 @@ def tsne(H,
         z = z.detach().cpu().numpy().reshape(z.shape[0], -1)
         y = y.numpy()
 
-        Z_test[i*batch_size:(i+1)*batch_size] = z.reshape(batch_size, H.output_dim)
+        Z_test[i*batch_size:(i+1)*batch_size] = z.reshape(batch_size, output_dim)
         Y_test[i*batch_size:(i+1)*batch_size] = y.reshape(batch_size)
 
     
@@ -124,6 +125,6 @@ if __name__ == '__main__':
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
     
-    tsne(H, train_dataloader, test_dataloader, DEVICE)
+    tsne(H, train_dataloader, test_dataloader, output_dim=320, DEVICE)
     
 
