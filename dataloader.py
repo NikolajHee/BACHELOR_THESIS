@@ -12,7 +12,7 @@ import pickle
 import numpy as np
 from torch.utils.data import DataLoader, Subset
 from sklearn.model_selection import train_test_split
-
+from sklearn.preprocessing import LabelEncoder
 
 
 class PTB_XL(Dataset):
@@ -52,6 +52,26 @@ class PTB_XL(Dataset):
         self.df['diagnostic_superclass'] = self.df.scp_codes.apply(aggregate_diagnostic)
         self.df['binary_label'] = [1 - (i == ['NORM']) for i in self.df.diagnostic_superclass]
 
+        self.test()
+    
+    def test(self):
+        save = ["" for _ in range(len(self.df.diagnostic_superclass))]
+
+        for i, element in enumerate(self.df.diagnostic_superclass):
+            if len(element) == 0:
+                save[i] = 'Empty'
+            else:
+                for el in element:
+                    save[i] += el
+
+        
+
+        le = LabelEncoder()
+
+        test = le.fit_transform(save)
+
+        self.df['test'] = test
+
     def __len__(self):
         return len(self.paths)
 
@@ -60,13 +80,16 @@ class PTB_XL(Dataset):
             #print([path for path in self.paths[idx]])
             signal = np.stack([wfdb.rdsamp(os.path.join(self.data_path, path))[0] for path in self.paths[idx]])
             label = self.df.binary_label[idx]
+            label = self.df['test'][idx]
         elif type(idx) is tuple:
             signal = np.stack([wfdb.rdsamp(os.path.join(self.data_path, self.paths[i]))[0] for i in idx])
             label = [self.df.binary_label[i] for i in idx]
+            label = [self.df['test'][i] for i in idx]
         else:
             image_path = os.path.join(self.data_path, self.paths[idx])
             signal = wfdb.rdsamp(image_path)[0]
             label = self.df.binary_label[idx]
+            label = self.df['test'][idx]
 
         
 

@@ -18,8 +18,10 @@ def tsne(H,
 
     Z_train = np.zeros((batch_size * train_batches, output_dim))
     Y_train = np.zeros((batch_size * train_batches))
+    classes_train = np.zeros((batch_size * train_batches))
     Z_test= np.zeros((batch_size * test_batches, output_dim))
     Y_test = np.zeros(batch_size * test_batches)
+    classes_test = np.zeros(batch_size * test_batches)
 
     
     for i, (X, y) in tqdm(enumerate(train_loader)):
@@ -36,6 +38,7 @@ def tsne(H,
 
         Z_train[i*batch_size:(i+1)*batch_size] = z.reshape(batch_size, output_dim)
         Y_train[i*batch_size:(i+1)*batch_size] = y.reshape(batch_size)
+        #classes_train[i*batch_size:(i+1)*batch_size] = 
 
     test1 = TSNE(n_components=2).fit_transform(Z_train)
 
@@ -89,7 +92,7 @@ if __name__ == '__main__':
 
     np.random.seed(0)
 
-    
+
     DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
 
