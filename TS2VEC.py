@@ -438,8 +438,9 @@ def train(classifier,
 
 
         # save the best model so far 
-        if best_test_error > np.mean(test_loss_list):
-            best_test_error = np.mean(test_loss_list)
+        mean_test =  np.mean(test_loss_list)
+        if best_test_error > mean_test:
+            best_test_error = mean_test
             torch.save(model.state_dict(), os.path.join(train_path, 'best_model.pt'))
 
 
