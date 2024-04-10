@@ -56,7 +56,7 @@ def tsne(H,
      
     #plt.legend()
     #wandb.log({"train_t_sne": fig})
-
+    plt.legend()
     plt.savefig(os.path.join(save_path, 'train_t_sne.png'))
     plt.close()
 
@@ -90,7 +90,7 @@ def tsne(H,
         
 
     #wandb.log({"test_t_sne": fig})
-
+    plt.legend()
     plt.savefig(os.path.join(save_path, 'test_t_sne.png'))
     plt.close()
 
