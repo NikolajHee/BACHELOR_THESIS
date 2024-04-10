@@ -310,8 +310,7 @@ def train(classifier,
                                                         verbose=verbose,
                                                         seed=0,
                                                         return_stand=True)
-    mean = mean.to(DEVICE)
-    std = std.to(DEVICE)
+
     #print(len(train_dataset), len(test_dataset))
 
     base = baseline(train_dataset=train_dataset,
