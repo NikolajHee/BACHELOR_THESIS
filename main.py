@@ -125,7 +125,7 @@ if args.model_path:
                        hidden_dim=args.hidden_dim[0],
                        p=args.p[0],
                        device=DEVICE,
-                       verbose=args.verbose)
+                       verbose=args.verbose).to(DEVICE)
         
         model = torch.optim.swa_utils.AveragedModel(model_)
 
