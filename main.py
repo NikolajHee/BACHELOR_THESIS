@@ -163,11 +163,16 @@ if args.model_path:
         train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size[0], shuffle=True, drop_last=True)
         test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size[0], shuffle=True, drop_last=True)
 
-        model.load_state_dict(torch.load(PATH))
+        model.load_state_dict(torch.load(os.path.join(PATH, 'best_model.pt')))
         model.eval()
 
         
-        tsne(model, train_dataloader, test_dataloader, output_dim=args.output_dim[0], device=DEVICE)
+        tsne(H=model, 
+             train_loader=train_dataloader, 
+             test_loader=test_dataloader, 
+             output_dim=args.output_dim[0], 
+             device=DEVICE,
+             save_path=PATH)
 
 
 else:

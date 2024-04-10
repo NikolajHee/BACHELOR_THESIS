@@ -4,13 +4,15 @@ from tqdm import tqdm
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 import torch
+import os
 
 
 def tsne(H, 
          train_loader,
          test_loader,
          output_dim,
-         device):
+         device,
+         save_path):
 
 
     batch_size = train_loader.batch_size
@@ -52,7 +54,7 @@ def tsne(H,
     #plt.legend()
     #wandb.log({"train_t_sne": fig})
 
-    plt.savefig('train_t_sne.png')
+    plt.savefig(os.path.join(save_path, 'train_t_sne.png'))
     plt.close()
 
     for i, (X, y) in tqdm(enumerate(test_loader)):
@@ -82,7 +84,7 @@ def tsne(H,
 
     #wandb.log({"test_t_sne": fig})
 
-    plt.savefig('test_t_sne.png')
+    plt.savefig(os.path.join(save_path, 'test_t_sne.png'))
     plt.close()
 
 
