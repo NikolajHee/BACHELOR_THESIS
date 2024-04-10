@@ -116,6 +116,7 @@ if args.model_path:
 
     if args.model.lower() == 'ts2vec':
         DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+        print(f"device: {DEVICE}")
 
         from TS2VEC import TS2VEC
 
