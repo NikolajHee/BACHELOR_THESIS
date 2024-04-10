@@ -86,10 +86,7 @@ def tsne(H,
     plt.close()
 
 
-
-
-if __name__ == '__main__':
-
+def main():
     np.random.seed(0)
 
 
@@ -110,7 +107,8 @@ if __name__ == '__main__':
     PATH = 'results/maybe_works/(08_04_2024)_(21_03_13)/best_model.pt'
 
     #print([test[0] for test in test_])
-    #H = model.load_state_dict(torch.load(PATH))
+    model.load_state_dict(torch.load(PATH))
+    model.eval()
 
     from dataloader import PTB_XL
     dataset = PTB_XL()
@@ -135,3 +133,51 @@ if __name__ == '__main__':
     tsne(model, train_dataloader, test_dataloader, output_dim=320, device=DEVICE)
     
 
+
+def main2():
+    
+
+    
+    DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+
+    from TS2VEC import TS2VEC
+    model_ = TS2VEC(input_dim=1, 
+                   output_dim=320, 
+                   hidden_dim=64,
+                   p=0.5, 
+                   device=DEVICE, 
+                   verbose=True).to(DEVICE)
+
+    model = torch.optim.swa_utils.AveragedModel(model_)
+    
+
+    from dataloader import PTB_XL
+    dataset = PTB_XL()
+
+    N_train, N_test, verbose = 10, 10, True
+
+    from utils import train_test_dataset
+    train_dataset, test_dataset = train_test_dataset(dataset=dataset,
+                                                        test_proportion=0.3,
+                                                        train_size=N_train,
+                                                        test_size=N_test,
+                                                        verbose=verbose,
+                                                        seed=0)
+
+
+    from torch.utils.data import DataLoader
+    train_dataloader = DataLoader(train_dataset, batch_size=8, shuffle=True, drop_last=True)
+    test_dataloader = DataLoader(test_dataset, batch_size=8, shuffle=True, drop_last=True)
+    
+    
+    tsne(model, train_dataloader, test_dataloader, output_dim=320, device=DEVICE)
+
+
+
+
+
+
+if __name__ == '__main__':
+
+    main2()

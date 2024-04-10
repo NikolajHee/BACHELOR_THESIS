@@ -13,7 +13,15 @@ def save_parameters(save_path, dictionary):
             f.write("\n")
 
 
-
+def remove_list(args):
+    #save = {}
+    dict_ = vars(args)
+    for (i,j) in dict_.items():
+        if type(j) == list:
+            args[i] = j[0]
+        else:
+            args[i] = j
+    #return save
 
 
 def train_test_dataset(dataset, test_proportion, train_size=None, test_size=None, verbose=False, seed=None, ):

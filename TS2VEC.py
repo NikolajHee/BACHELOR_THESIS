@@ -21,11 +21,6 @@ DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cp
 
 print(f"device: {DEVICE}")
 
-# TODO: Make faster
-# TODO: Learn how the loss works
-# TODO: torch-seed the model
-# TODO: have fun
-# TODO: There is something about hidden dimension in the article?
 
 
 
