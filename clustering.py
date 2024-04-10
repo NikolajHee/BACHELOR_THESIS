@@ -65,6 +65,7 @@ def tsne(H,
         z = F.max_pool1d(z, kernel_size=z.shape[2])
 
         z = z.detach().cpu().numpy().reshape(z.shape[0], -1)
+        print(y)
         y = y.numpy()
 
         Z_test[i*batch_size:(i+1)*batch_size] = z.reshape(batch_size, output_dim)
