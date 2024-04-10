@@ -303,12 +303,15 @@ def train(classifier,
     best_test_error = np.inf
 
     from utils import train_test_dataset
-    train_dataset, test_dataset = train_test_dataset(dataset=dataset,
+    train_dataset, test_dataset, mean, std = train_test_dataset(dataset=dataset,
                                                         test_proportion=0.3,
                                                         train_size=N_train,
                                                         test_size=N_test,
                                                         verbose=verbose,
-                                                        seed=0)
+                                                        seed=0,
+                                                        return_stand=True)
+    mean = mean.to(DEVICE)
+    std = std.to(DEVICE)
     #print(len(train_dataset), len(test_dataset))
 
     base = baseline(train_dataset=train_dataset,
@@ -342,7 +345,9 @@ def train(classifier,
         print(f"Epoch: {epoch}")
 
         for i, (X, Y) in tqdm(enumerate(train_dataloader)):
+            
             X = X.to(DEVICE)
+            X = (X - mean)/std
 
             crop = random_cropping(False)
 
@@ -375,6 +380,8 @@ def train(classifier,
 
         for i, (X, y) in tqdm(enumerate(test_dataloader)):
             X = X.to(DEVICE)
+
+            X = (X - mean)/std
 
             crop = random_cropping(False)
 
@@ -460,10 +467,9 @@ if __name__ == '__main__':
     from utils import train_test_dataset
     train_dataset, test_dataset = train_test_dataset(dataset=dataset,
                                                         test_proportion=0.1,
-                                                        train_size=1000,
-                                                        test_size=100,
                                                         verbose=True,
-                                                        seed=0)
+                                                        seed=0,
+                                                        return_stand=True)
     
 
     crop = random_cropping(False)
@@ -483,10 +489,13 @@ if __name__ == '__main__':
     
     
 
-
+    train()
 
     z1 = model.forward(signal_aug_1.float())
     z2 = model.forward(signal_aug_2.float())
+
+
+
 
     z1 = z1.reshape(-1, 1000, 16)
     z2 = z2.reshape(-1, 1000, 16)

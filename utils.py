@@ -24,7 +24,13 @@ def remove_list(args):
     #return save
 
 
-def train_test_dataset(dataset, test_proportion, train_size=None, test_size=None, verbose=False, seed=None, ):
+def train_test_dataset(dataset, 
+                       test_proportion, 
+                       train_size=None, 
+                       test_size=None, 
+                       verbose=False, 
+                       seed=None, 
+                       return_stand=False):
 
     if seed is not None:
         np.random.seed(seed)
@@ -35,6 +41,16 @@ def train_test_dataset(dataset, test_proportion, train_size=None, test_size=None
     else:
         train_dataset = Subset(dataset, train_indices[:train_size])
         test_dataset = Subset(dataset, test_indices[:test_size])
+
+    [T, D] = train_dataset[0][0].shape
+    
+    X = np.zeros((len(train_dataset), T, D))
+
+    if return_stand:
+        for i in range(len(train_dataset)):
+            X[i,:,:] = train_dataset[i][0]
+
+        return train_dataset, test_dataset, np.mean(X), np.std(X)
 
     return train_dataset, test_dataset
 
