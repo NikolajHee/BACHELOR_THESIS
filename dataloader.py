@@ -81,16 +81,16 @@ class PTB_XL(Dataset):
             #print([path for path in self.paths[idx]])
             signal = np.stack([wfdb.rdsamp(os.path.join(self.data_path, path))[0] for path in self.paths[idx]])
             label = self.df.binary_label[idx]
-            label = self.df['test'][idx]
+            #label = self.df['test'][idx]
         elif type(idx) is tuple:
             signal = np.stack([wfdb.rdsamp(os.path.join(self.data_path, self.paths[i]))[0] for i in idx])
             label = [self.df.binary_label[i] for i in idx]
-            label = [self.df['test'][i] for i in idx]
+            #label = [self.df['test'][i] for i in idx]
         else:
             image_path = os.path.join(self.data_path, self.paths[idx])
             signal = wfdb.rdsamp(image_path)[0]
             label = self.df.binary_label[idx]
-            label = self.df['test'][idx]
+            #label = self.df['test'][idx]
 
         
 
