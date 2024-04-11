@@ -104,7 +104,12 @@ class UEA(Dataset):
     
     """
     def __init__(self, name):
-        self.X, self.y = load_classification("ElectricDevices")
+        self.X, self.y = load_classification(name)
+
+        if type(self.y[0]) is np.str_:
+            le = LabelEncoder()
+            self.y = le.fit_transform(self.y)
+
     
     def __len__(self):
         return len(self.y)

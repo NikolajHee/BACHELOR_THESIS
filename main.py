@@ -48,11 +48,8 @@ arguments = vars(args)
 
 def main():
     config = wandb.config
-    save_path = config.save_file
-    # # add current date and time
 
-
-    save_path = os.path.join(save_path, dt_string)
+    save_path = os.path.join(config.dataset, dt_string)
 
 
     if not os.path.exists(save_path):
