@@ -298,7 +298,8 @@ def train(classifier,
           N_train=1000,
           N_test=100,
           wandb=None,
-          train_path=None):
+          train_path=None,
+          classify=False):
     
     best_test_error = np.inf
 
@@ -372,6 +373,7 @@ def train(classifier,
                 torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
             
             optimizer.step()
+            model.update_parameters(model_)
 
             train_loss_list.append(train_loss.item())
         
@@ -405,7 +407,7 @@ def train(classifier,
 
         model.test = True
 
-        if classifier_eval:
+        if classify:
             train_accuracy, test_accuracy = classifier_train(classifier, 
                                                             model, 
                                                             train_loader=train_dataloader, 
@@ -421,7 +423,7 @@ def train(classifier,
                  device=DEVICE,
                  wandb=wandb)
 
-        if classifier_eval:
+        if classify:
             train_accuracy_save[epoch] = train_accuracy
             test_accuracy_save[epoch] = test_accuracy
             print(f"Train accuracy {train_accuracy}. Test accuracy {test_accuracy}. Base {base}.")
@@ -432,7 +434,7 @@ def train(classifier,
 
         if wandb is not None:
             wandb.log({"tsloss/train_loss": train_loss, "tsloss/test_loss": test_loss})
-            if classifier_eval:
+            if classify:
                 wandb.log({"accuracy/train_accuracy": train_accuracy, "accuracy/test_accuracy": test_accuracy})
 
 
