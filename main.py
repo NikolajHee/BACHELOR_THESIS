@@ -36,6 +36,7 @@ parser.add_argument('-v', '--verbose', action='store_true')
 parser.add_argument('--N_train', default=[None], type=int, nargs='+')
 parser.add_argument('--N_test', default=[None], type=int, nargs='+')
 parser.add_argument('--model_path', default=None, nargs='+')
+parser.add_argument('--classify', action='store_true')
 
 
 debug_mode = False
@@ -90,7 +91,8 @@ def main():
                                                                                                 N_train=config.N_train,
                                                                                                 N_test=config.N_test,
                                                                                                 wandb=wandb,
-                                                                                                train_path=save_path)
+                                                                                                train_path=save_path,
+                                                                                                classify=config.classify)
         
 
         # np.save(os.path.join(save_path, 'train_ts2vec_loss'), train_loss_save)
@@ -120,7 +122,7 @@ if args.model_path:
 
         from TS2VEC import TS2VEC
 
-        model_ = TS2VEC(input_dim=args.input_dim,
+        model_ = TS2VEC(input_dim=args.input_dim[0],
                        output_dim=args.output_dim[0],
                        hidden_dim=args.hidden_dim[0],
                        p=args.p[0],
