@@ -51,7 +51,7 @@ arguments = vars(args)
 def main():
     wandb.init(project="BACHELOR_THESIS",
                 name=dt_string,
-                config=save)
+                config=arguments)
             
 
     config = wandb.config
@@ -209,6 +209,8 @@ else:
                 save[i] = j[0]
             else:
                 save[i] = j
+        
+        arguments = save
         now = datetime.now()
 
         dt_string = now.strftime("(%d_%m_%Y)_(%H_%M_%S)")
