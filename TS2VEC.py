@@ -3,6 +3,7 @@ General framework for the model described by TS2VEC
 
 """
 
+# imports
 import torch
 from torch import nn
 import warnings
@@ -17,6 +18,7 @@ from utils import baseline
 import os
 from tqdm import tqdm
 
+
 DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
 print(f"device: {DEVICE}")
@@ -24,7 +26,7 @@ print(f"device: {DEVICE}")
 
 
 
-class input_projection_layer(nn.Module):
+class InputProjectionLayer(nn.Module):
     """
     Projection for each timestamp
         Feature dimension is 12
@@ -46,14 +48,14 @@ class input_projection_layer(nn.Module):
 
 
 
-class timestamp_masking_layer(nn.Module):
+class TimestampMaskingLayer(nn.Module):
     """
     Randomly masking some of the values from the representation
         only used in training
     """
-    def __init__(self, verbose=False):
+
+    def __init__(self):
         super().__init__()
-        self.verbose = verbose
 
 
     def __call__(self, r_it, p):
@@ -70,25 +72,27 @@ class timestamp_masking_layer(nn.Module):
 
 
 def take_per_row(A, indx, num_elem):
+    """
+    From github of ts2vec
+    """
     all_indx = indx[:,None] + np.arange(num_elem)
     return A[torch.arange(all_indx.shape[0])[:,None], all_indx]
 
 
-class random_cropping(nn.Module):
+class RandomCropping(nn.Module):
     """
     Cropping at random
-        works only for 1 dimensional right now?
         Only used in training
+
     """
 
-    def __init__(self, verbose=False):
+    def __init__(self):
         super().__init__()
-        self.verbose = verbose
-
         self.temporal_unit = 0
     
     def __call__(self, x):
-        [N, T, D] = x.shape
+
+        # TOOO: how does this work?
        
         ts_l = x.size(1)
         crop_l = np.random.randint(low=2 ** (self.temporal_unit + 1), high=ts_l+1)
@@ -107,6 +111,9 @@ class random_cropping(nn.Module):
 
 
 class CNN_block(nn.Module):
+    """
+    dumped
+    """
     def __init__(self, l, dim):
         super().__init__()
         self.conv1 = nn.Conv1d(dim, dim, padding='same', kernel_size=3, dilation=2**l)
@@ -122,6 +129,9 @@ class CNN_block(nn.Module):
 
 
 class dilated_CNN_layer(nn.Module):
+    """
+    dumped
+    """
     """
     Hmm a bit difficult.
 
@@ -193,6 +203,22 @@ class DilatedConvEncoder(nn.Module):
 
 
 class TS2VEC(nn.Module):
+    """
+    Main model class. 
+
+    Consists of three layers
+        InputProjectionLayer
+        TimestampMaskingLayer
+        DilatedConvEncoder
+
+    input_dim : feature dimension D of the time series
+    output_dim : latent dimension for each timestamp
+    hidden_dim : dimension of the convolutional layers
+    p : amount of masking applied during training
+    device : device used during training
+    verbose : verbose
+    """
+
     def __init__(self, 
                  input_dim, 
                  output_dim=320, # Same as ts2vec 
@@ -203,20 +229,24 @@ class TS2VEC(nn.Module):
         
         super().__init__()
         self.output_dim = output_dim
-        self.input_project_layer = input_projection_layer(input_dim=input_dim,
+        self.test = False  # variable for test/train-mode
+        self.p = p
+
+
+        # initialising layers
+
+        self.input_project_layer = InputProjectionLayer(input_dim=input_dim,
                                                             output_dim=hidden_dim,
                                                             device = device)
         
-        self.time_masking_layer = timestamp_masking_layer(verbose=verbose)
-
+        self.time_masking_layer = TimestampMaskingLayer()
 
         #self.dilated_cnn_layer = dilated_CNN_layer(dim=output_dim)
 
-        self.dilated_cnn_layer = DilatedConvEncoder(in_channels=64, channels=[64]*10 + [output_dim], kernel_size=3)
+        # WARNING: hardcoded to be 10 blocks
+        self.dilated_cnn_layer = DilatedConvEncoder(in_channels=hidden_dim, channels=[hidden_dim]*10 + [output_dim], kernel_size=3)
 
-        self.p = p
-        self.test = False
-
+            
 
 
     def forward(self, x):
@@ -230,7 +260,7 @@ class TS2VEC(nn.Module):
 
         z = self.dilated_cnn_layer(r_i)
 
-        return(z)
+        return z
 
 
 
@@ -300,6 +330,9 @@ def train(classifier,
           wandb=None,
           train_path=None,
           classify=False):
+    """
+    Main training function
+    """
     
     best_test_error = np.inf
 
@@ -349,7 +382,7 @@ def train(classifier,
             X = X.to(DEVICE)
             X = (X - mean)/std
 
-            crop = random_cropping(False)
+            crop = RandomCropping()
 
             #print(X.shape, type(X), X)
             signal_aug_1, signal_aug_2, crop_l = crop(X)
@@ -384,7 +417,7 @@ def train(classifier,
 
             X = (X - mean)/std
 
-            crop = random_cropping(False)
+            crop = RandomCropping(False)
 
             signal_aug_1, signal_aug_2, crop_l = crop(X)
 
@@ -473,7 +506,7 @@ if __name__ == '__main__':
                                                         return_stand=True)
     
 
-    crop = random_cropping(False)
+    crop = RandomCropping(False)
 
     signal_aug_1, signal_aug_2, crop_l = crop(torch.from_numpy(train_dataset[0][0]).reshape(1, 1000, 12))
     import matplotlib.pyplot as plt
