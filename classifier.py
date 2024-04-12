@@ -9,7 +9,8 @@ def classifier_train(classifier_name,
                     H, 
                     train_loader,
                     test_loader,
-                    device):
+                    device,
+                    output_dim):
 
     if classifier_name == 'svc':
         classifier = svm.SVC(kernel='rbf') 
@@ -21,9 +22,9 @@ def classifier_train(classifier_name,
     batch_size = train_loader.batch_size
     train_batches, test_batches = len(train_loader), len(test_loader)
 
-    Z_train = np.zeros((batch_size * train_batches, H.output_dim))
+    Z_train = np.zeros((batch_size * train_batches, output_dim))
     Y_train = np.zeros((batch_size * train_batches))
-    Z_test= np.zeros((batch_size * test_batches, H.output_dim))
+    Z_test= np.zeros((batch_size * test_batches, output_dim))
     Y_test = np.zeros(batch_size * test_batches)
 
     
@@ -38,7 +39,7 @@ def classifier_train(classifier_name,
 
         y = y.numpy()
 
-        Z_train[i*batch_size:(i+1)*batch_size] = z.reshape(batch_size, H.output_dim)
+        Z_train[i*batch_size:(i+1)*batch_size] = z.reshape(batch_size, output_dim)
         Y_train[i*batch_size:(i+1)*batch_size] = y.reshape(batch_size)
 
     classifier.fit(Z_train, Y_train)
@@ -55,7 +56,7 @@ def classifier_train(classifier_name,
         z = z.detach().cpu().numpy().reshape(z.shape[0], -1)
         y = y.numpy()
 
-        Z_test[i*batch_size:(i+1)*batch_size] = z.reshape(batch_size, H.output_dim)
+        Z_test[i*batch_size:(i+1)*batch_size] = z.reshape(batch_size, output_dim)
         Y_test[i*batch_size:(i+1)*batch_size] = y.reshape(batch_size)
 
     #classifier.fit(Z_test, Y_test)
