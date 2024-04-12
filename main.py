@@ -49,6 +49,11 @@ arguments = vars(args)
 
 #* train function ; can be executed both by a sweep, or a by single values
 def main():
+    wandb.init(project="BACHELOR_THESIS",
+                name=dt_string,
+                config=save)
+            
+
     config = wandb.config
 
     save_path = os.path.join(config.dataset, dt_string)
@@ -208,9 +213,7 @@ else:
 
         dt_string = now.strftime("(%d_%m_%Y)_(%H_%M_%S)")
 
-        wandb.init(project="BACHELOR_THESIS",
-                name=dt_string,
-                config=save)
+
         
         main()
 
