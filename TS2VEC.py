@@ -417,7 +417,7 @@ def train(classifier,
 
             X = (X - mean)/std
 
-            crop = RandomCropping(False)
+            crop = RandomCropping()
 
             signal_aug_1, signal_aug_2, crop_l = crop(X)
 
@@ -436,7 +436,6 @@ def train(classifier,
             
         print(f"Epoch {epoch}. Train loss {np.mean(train_loss_list)}. Test loss {np.mean(test_loss_list)}.")
         
-        classifier_eval = False
 
         model.test = True
 
