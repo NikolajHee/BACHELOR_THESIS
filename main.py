@@ -30,7 +30,7 @@ parser.add_argument('-bs', '--batch_size', default=[8], type=int, nargs='+')
 parser.add_argument('-ne', '--n_epochs', default=[200], type=int, nargs='+')
 parser.add_argument('-lr', '--learning_rate', default=[0.001], type=float, nargs='+')
 parser.add_argument('-p', default=[0.5], type=float, nargs='+')
-parser.add_argument('-id', '--input_dim', default=[12], type=int)
+parser.add_argument('-id', '--input_dim', default=12, type=int)
 parser.add_argument('-gc', '--grad_clip', default=[None], type=float, nargs='+')
 parser.add_argument('-v', '--verbose', action='store_true')
 parser.add_argument('--N_train', default=[None], type=int, nargs='+')
@@ -119,7 +119,7 @@ if args.model_path:
 
         from TS2VEC import TS2VEC
 
-        model_ = TS2VEC(input_dim=args.input_dim[0],
+        model_ = TS2VEC(input_dim=args.input_dim,
                        output_dim=args.output_dim[0],
                        hidden_dim=args.hidden_dim[0],
                        p=args.p[0],
