@@ -44,8 +44,10 @@ debug_mode = False
 args = parser.parse_args()
 
 arguments = vars(args)
-#print(arguments)
 
+
+
+#* train function ; can be executed both by a sweep, or a by single values
 def main():
     config = wandb.config
 
@@ -107,7 +109,7 @@ def main():
         # plt.savefig(save_path + '/class_loss_function.png')
         # plt.close()
 
-#print(args.model_path)
+#* if model_path is available; proceed with evaluating the model
 if args.model_path:
     #remove_list(args)
     from clustering import tsne
@@ -177,6 +179,7 @@ if args.model_path:
 
 else:
     if any([len(i) > 1 for i in arguments.values() if type(i) == list]):
+        print("initializing sweep")
         sweep_configuration = {
             "method": "grid",
             "metric": {"name": "tsloss/test_loss", "goal": "minimize"},
@@ -186,10 +189,15 @@ else:
             },
         }
 
+        now = datetime.now()
+
+        dt_string = now.strftime("(%d_%m_%Y)_(%H_%M_%S)")
+
         sweep_id = wandb.sweep(sweep=sweep_configuration, project="BACHELOR_THESIS")
 
-        wandb.agent(sweep_id, function=main, count=10)
+        wandb.agent(sweep_id, function=main)
     else:
+        print("initializing single value training")
         save = {}
         for (i,j) in arguments.items():
             if type(j) == list:
