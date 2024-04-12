@@ -444,7 +444,8 @@ def train(classifier,
                                                             model, 
                                                             train_loader=train_dataloader, 
                                                             test_loader=test_dataloader, 
-                                                            device=DEVICE)
+                                                            device=DEVICE,
+                                                            output_dim=output_dim)
             
         
         t_sne = False
