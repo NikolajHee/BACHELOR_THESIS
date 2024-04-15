@@ -17,9 +17,8 @@ import os
 def tsne(H, 
          train_dataloader,
          test_dataloader,
-         output_dim,
          device,
-         save_path):
+         save_path=''):
     """
     H : encoder to create representations
     train_loader : dataloader for the training split
@@ -28,8 +27,9 @@ def tsne(H,
     device : the torch_device where the models resides. 
     save_path : where to save the png's
     """
-
+    output_dim = H.module.output_dim
     batch_size = train_dataloader.batch_size
+
     train_batches, test_batches = len(train_dataloader), len(test_dataloader)
 
     Z_train = np.zeros((batch_size * train_batches, output_dim))
