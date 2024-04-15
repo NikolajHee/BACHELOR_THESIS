@@ -354,8 +354,7 @@ class TS2VEC(nn.Module):
                 fig_train, fig_test = tsne(self.model,
                                     train_dataloader=train_dataloader,
                                     test_dataloader=test_dataloader,
-                                    device=self.device,
-                                    wandb=wandb)
+                                    device=self.device)
                 
                 wandb.log({"t_sne/train_t_sne": fig_train, "t_sne/test_t_sne": fig_test})
 
