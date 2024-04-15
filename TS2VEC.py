@@ -14,61 +14,8 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from utils import baseline
 import os
 from tqdm import tqdm
-
-
-DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-
-print(f"device: {DEVICE}")
-
-
-
-
-class InputProjectionLayer(nn.Module):
-    """
-    Projection for each timestamp
-        Feature dimension is 12
-
-        input_dim : input dimension of data
-        output_dim : the latent dimension
-        device : 'cpu' or 'cuda'
-    """
-
-    def __init__(self, input_dim: int, output_dim: int, device):
-        super().__init__()
-        self.fully_connected = nn.Linear(in_features=input_dim, 
-                                        out_features=output_dim,
-                                        bias=True,
-                                        device=device)
-
-    def __call__(self, x: torch.tensor):
-        return self.fully_connected(x)
-
-
-
-class TimestampMaskingLayer(nn.Module):
-    """
-    Randomly masking some of the values from the representation
-        only used in training
-    """
-
-    def __init__(self):
-        super().__init__()
-
-
-    def __call__(self, r_it, p):
-        """
-        r_it : the latent vector
-        """
-        [N, r, c] = r_it.shape
-
-        masking = torch.rand((N, r, c)) > (1-p)
-
-        r_it[masking] = 0
-        return r_it
-
 
 
 def take_per_row(A, indx, num_elem):
@@ -106,48 +53,10 @@ class RandomCropping(nn.Module):
         signal1 = take_per_row(x, crop_offset + crop_eleft, crop_right - crop_eleft)
         signal2 = take_per_row(x, crop_offset + crop_left, crop_eright - crop_left)
 
-        return signal1, signal2, crop_l
+        return signal1, signal2, crop_l, {'l1': crop_offset + crop_eleft, 'r1': crop_offset + crop_eleft + crop_right - crop_eleft,
+                                          'l2': crop_offset + crop_left, 'r2': crop_offset + crop_left + crop_eright - crop_left}
 
 
-
-class CNN_block(nn.Module):
-    """
-    dumped
-    """
-    def __init__(self, l, dim):
-        super().__init__()
-        self.conv1 = nn.Conv1d(dim, dim, padding='same', kernel_size=3, dilation=2**l)
-        self.conv2 = nn.Conv1d(dim, dim, padding='same', kernel_size=3, dilation=2**l)
-
-    def forward(self, x):
-        residual = x
-        x = self.conv1(x)
-        x = nn.ReLU()(x)
-        x = self.conv2(x)
-
-        return x + residual
-
-
-class dilated_CNN_layer(nn.Module):
-    """
-    dumped
-    """
-    """
-    Hmm a bit difficult.
-
-    Ten residual blocks
-    """
-    def __init__(self, dim):
-        super().__init__()
-        self.CNN = nn.Sequential(*[
-            CNN_block(l=i, dim=dim) 
-            for i in range(10)
-        ])
-
-    
-    def __call__(self, x):
-        # input x is (batch_size, T, dimension)
-        return self.CNN(x)
 
 
 class SamePadConv(nn.Module):
@@ -202,67 +111,67 @@ class DilatedConvEncoder(nn.Module):
         return self.net(x)
 
 
-class TS2VEC(nn.Module):
-    """
-    Main model class. 
+class Encoder(nn.Module):
+    def __init__(self, input_dim, hidden_dim, output_dim, p):
+        """
+        The main Encoder of the TS2VEC inspired by TS2VEC.
 
-    Consists of three layers
-        InputProjectionLayer
-        TimestampMaskingLayer
-        DilatedConvEncoder
+        Consists of three layers
+            InputProjectionLayer
+            TimestampMaskingLayer
+            DilatedConvEncoder
 
-    input_dim : feature dimension D of the time series
-    output_dim : latent dimension for each timestamp
-    hidden_dim : dimension of the convolutional layers
-    p : amount of masking applied during training
-    device : device used during training
-    verbose : verbose
-    """
-
-    def __init__(self, 
-                 input_dim, 
-                 output_dim=320, # Same as ts2vec 
-                 hidden_dim=64,
-                 p = 0.5, 
-                 device = 'cpu', 
-                 verbose=False):
-        
+        inputs: 
+                input_dim : feature dimension D of the time series
+                hidden_dim : dimension of the output of InputProjectionLayer and main kernels of DilatedConvEncoder.
+                output_dim : latent dimension for each timestamp
+                p : amount of masking applied during training
+                device : device used during training
+        """
         super().__init__()
-        self.output_dim = output_dim
-        self.test = False  # variable for test/train-mode
+        # Input Projection Layer (outputs feature for each timestamp)
         self.p = p
 
-
         # initialising layers
-
-        self.input_project_layer = InputProjectionLayer(input_dim=input_dim,
-                                                            output_dim=hidden_dim,
-                                                            device = device)
+        self.input_project_layer = nn.Linear(in_features=input_dim, 
+                                             out_features=hidden_dim,
+                                             bias=True)
         
-        self.time_masking_layer = TimestampMaskingLayer()
-
-        #self.dilated_cnn_layer = dilated_CNN_layer(dim=output_dim)
-
         # WARNING: hardcoded to be 10 blocks
-        self.dilated_cnn_layer = DilatedConvEncoder(in_channels=hidden_dim, channels=[hidden_dim]*10 + [output_dim], kernel_size=3)
+        self.dilated_cnn_layer = DilatedConvEncoder(in_channels=hidden_dim, 
+                                                    channels=[hidden_dim]*10 + [output_dim], 
+                                                    kernel_size=3)
+        # variable for test/train mode
+        self.test = False
 
-            
 
+    def TimestampMaskingLayer(self, r_it, p):
+        """
+        Randomly masking some of the values from the representation
+            only used in training
+        """
+        # N is batch_size, T is length of signal, d is dimension
+        [N, T, d] = r_it.shape
+
+        # masking:
+        masking = torch.rand((N, T)) > (1-p)
+
+        r_it[masking] = 0
+        return r_it
+    
 
     def forward(self, x):
-
-        r_it = self.input_project_layer(x)
-
-        # no instances should be masked, if it is test
-        r_i = r_it if self.test else self.time_masking_layer(r_it, p=self.p)
-
-        r_i = r_i.transpose(1,2)
-
-        z = self.dilated_cnn_layer(r_i)
-
+        """
+        input 
+            x : should be of dimension (N, T, D), that is (batch_size, signal length, dimension)
+        """
+        r_it = self.input_project_layer(x) # N x T x Dr
+        # no instances should be masked, if it is in test-mode
+        r_i = r_it if self.test else self.TimestampMaskingLayer(r_it, p=self.p) # N x T x Dr
+        r_i = r_i.transpose(1,2) # N x Dr x T
+        z = self.dilated_cnn_layer(r_i) # N x Do x T
+        z = z.transpose(1,2) # N x T x Do
         return z
-
-
 
 
 def hierarchical_contrastive_loss(z1, z2, alpha=0.5, temporal_unit=0):
@@ -314,178 +223,156 @@ def temporal_contrastive_loss(z1, z2):
 
 
 
-def train(classifier,
-          dataset,
-          hidden_dim=64,
-          output_dim=256, 
-          n_epochs=30, 
-          batch_size=10,
-          learning_rate=0.001,
-          p=0.5,
-          input_dim=12,
-          grad_clip=None,
-          verbose=False,
-          N_train=1000,
-          N_test=100,
-          wandb=None,
-          train_path=None,
-          classify=False):
+class TS2VEC(nn.Module):
     """
-    Main training function
+    Main model class. 
     """
-    
-    best_test_error = np.inf
 
-    from utils import train_test_dataset
-    train_dataset, test_dataset, mean, std = train_test_dataset(dataset=dataset,
-                                                        test_proportion=0.3,
-                                                        train_size=N_train,
-                                                        test_size=N_test,
-                                                        verbose=verbose,
-                                                        seed=0,
-                                                        return_stand=True)
-
-    #print(len(train_dataset), len(test_dataset))
-
-    base = baseline(train_dataset=train_dataset,
-                    test_dataset=test_dataset)
-
-    model_ = TS2VEC(input_dim=input_dim, 
-                   output_dim=output_dim, 
-                   hidden_dim=hidden_dim,
-                   p=p, 
-                   device=DEVICE, 
-                   verbose=verbose).to(DEVICE)
-    
-    model = torch.optim.swa_utils.AveragedModel(model_)
-
-    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
-    
-    train_loss_save = np.zeros((n_epochs))
-    test_loss_save = np.zeros((n_epochs))
-    train_accuracy_save = np.zeros((n_epochs + 1))
-    test_accuracy_save = np.zeros((n_epochs + 1))
-    
-
-    for epoch in range(n_epochs):
-        # new shuffle for each epoch
-        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
-        test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
-
-        model.test = False
-
-        train_loss_list, test_loss_list = [], []
-        print(f"Epoch: {epoch}")
-
-        for i, (X, Y) in tqdm(enumerate(train_dataloader)):
-            
-            X = X.to(DEVICE)
-            X = (X - mean)/std
-
-            crop = RandomCropping()
-
-            #print(X.shape, type(X), X)
-            signal_aug_1, signal_aug_2, crop_l = crop(X)
-            
-            optimizer.zero_grad()
-
-            z1 = model.forward(signal_aug_1.float())
-            z2 = model.forward(signal_aug_2.float())
-
-            z1 = z1.reshape(batch_size, -1, output_dim)
-            z2 = z2.reshape(batch_size, -1, output_dim)
-
-            train_loss = hierarchical_contrastive_loss(z1[:, -crop_l:],  z2[:,:crop_l])
-
-
-            #if i%20==0: print(f"Train loss: {train_loss}.")
-
-            train_loss.backward()
-            
-            if grad_clip is not None:
-                torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
-            
-            optimizer.step()
-            model.update_parameters(model_)
-
-            train_loss_list.append(train_loss.item())
+    def __init__(self, 
+                 input_dim, 
+                 hidden_dim,
+                 output_dim,
+                 p, 
+                 device):
         
-        model.test = True
+        super().__init__()
 
-        for i, (X, y) in tqdm(enumerate(test_dataloader)):
-            X = X.to(DEVICE)
+        self.output_dim = output_dim
+        self.device = device
 
-            X = (X - mean)/std
+        # init encoder
+        self.encoder = Encoder(input_dim=input_dim,
+                               hidden_dim=hidden_dim,
+                               output_dim=output_dim,
+                               p=p).to(device)
 
-            crop = RandomCropping()
+        # see article [insert cite]
+        self.model = torch.optim.swa_utils.AveragedModel(self.encoder)
 
-            signal_aug_1, signal_aug_2, crop_l = crop(X)
+        # TODO: why is this nessacary?
+        self.model.update_parameters(self.encoder)
 
-            z1 = model.forward(signal_aug_1.float())
-            z2 = model.forward(signal_aug_2.float())
 
-            z1 = z1.reshape(batch_size, -1, output_dim)
-            z2 = z2.reshape(batch_size, -1, output_dim)
+    def train(self,
+          train_dataset,
+          test_dataset,
+          n_epochs, 
+          batch_size,
+          learning_rate,
+          grad_clip,
+          wandb,
+          train_path,
+          t_sne,
+          classifier):
 
-            test_loss = hierarchical_contrastive_loss(z1[:, -crop_l:],  z2[:,:crop_l])
 
-            #if i%1==0: print(f"Test loss: {test_loss}.")
+        # initializing the best seen test error
+        best_train_error = np.inf
 
-            test_loss_list.append(test_loss.item())
+        # same optimizer as ts2vec; experiment with other choices
+        optimizer = torch.optim.AdamW(self.model.parameters(), lr=learning_rate, weight_decay=0.01)
+        
+        # main training loop
+        for epoch in range(n_epochs):
+            # new shuffle for each epoch
+            train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
+            test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
+
+            # ensure training mode
+            self.model.module.test, self.encoder.test = False, False
+
+            train_loss_list, test_loss_list = [], []
+
+            # evaluating each batch
+            for i, (X, Y) in tqdm(enumerate(train_dataloader)):
+                
+                X = X.to(self.device)
+                
+                # random crop two overlapping augments:
+                crop = RandomCropping()
+
+                signal_aug_1, signal_aug_2, crop_l, _ = crop(X)
+                
+                # reset gradients
+                optimizer.zero_grad()
+
+                # input augments to model
+                z1 = self.model.forward(signal_aug_1.float())
+                z2 = self.model.forward(signal_aug_2.float())
+
+                # evaluate the loss on the overlapping part
+                # TODO: Why only on the overlapping part?
+                train_loss = hierarchical_contrastive_loss(z1[:, -crop_l:],  z2[:,:crop_l])
+
+                # calculate gradients
+                train_loss.backward()
+                
+                # clip gradient
+                if grad_clip is not None:
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), grad_clip)
+                
+                # take gradient step
+                optimizer.step()
+
+                # TODO: What does this do?
+                self.model.update_parameters(self.encoder)
+
+                train_loss_list.append(train_loss.item())
+                
+            print(f"Epoch {epoch}. Train loss {np.mean(train_loss_list)}.")
+            
+            # ensure model test-mode
+            self.model.module.test, self.encoder.test = False, False
+
+
+            # TODO: Fix below
+            # log the loss in WandB
+            wandb.log({"tsloss/hierarchical_contrastive_loss": np.mean(train_loss_list)})
+
+            # test the representations by classifying the labels
+            if classifier and ((epoch%10==0) or (epoch == n_epochs-1)):
+                train_accuracy, test_accuracy = classifier_train(classifier, 
+                                                                self.model, 
+                                                                train_loader=train_dataloader, 
+                                                                test_loader=test_dataloader, 
+                                                                device=self.device)
+
+                wandb.log({"classifier/train_accuracy": train_accuracy, "classifier/test_accuracy": test_accuracy})
+                
+
+
 
             
-        print(f"Epoch {epoch}. Train loss {np.mean(train_loss_list)}. Test loss {np.mean(test_loss_list)}.")
-        
 
-        model.test = True
-
-        if classify:
-            train_accuracy, test_accuracy = classifier_train(classifier, 
-                                                            model, 
-                                                            train_loader=train_dataloader, 
-                                                            test_loader=test_dataloader, 
-                                                            device=DEVICE,
-                                                            output_dim=output_dim)
-            
-        
-        t_sne = False
-        if t_sne:
-            tsne(model,
-                 train_loader=train_dataloader,
-                 test_loader=test_dataloader,
-                 device=DEVICE,
-                 wandb=wandb)
-
-        if classify:
-            train_accuracy_save[epoch] = train_accuracy
-            test_accuracy_save[epoch] = test_accuracy
-            print(f"Train accuracy {train_accuracy}. Test accuracy {test_accuracy}. Base {base}.")
+            # test the representations by clustering (with self-organizing maps)
+            if t_sne and ((epoch%10==0) or (epoch == n_epochs-1)):
+                fig_train, fig_test = tsne(self.model,
+                                    train_dataloader=train_dataloader,
+                                    test_dataloader=test_dataloader,
+                                    device=self.device,
+                                    wandb=wandb)
+                
+                wandb.log({"t_sne/train_t_sne": fig_train, "t_sne/test_t_sne": fig_test})
 
 
-        train_loss_save[epoch] = np.mean(train_loss_list)
-        test_loss_save[epoch] = np.mean(test_loss_list)
 
-        if wandb is not None:
-            wandb.log({"tsloss/train_loss": train_loss, "tsloss/test_loss": test_loss})
-            if classify:
-                wandb.log({"accuracy/train_accuracy": train_accuracy, "accuracy/test_accuracy": test_accuracy})
+            # save the actual model
+            torch.save(self.model.state_dict(), os.path.join(train_path, 'model.pt'))
 
 
-        # save the actual model
-        torch.save(model.state_dict(), os.path.join(train_path, 'model.pt'))
+            # save the model with some patience
+            # # TODO: consider having some patience or/and threshold (either percentage or absolute)
+            mean_train =  np.mean(train_loss_list)
+            if best_train_error > mean_train:
+                print(f"best model from epoch {epoch + 1}")
+                best_train_error = mean_train
+                torch.save(self.model.state_dict(), os.path.join(train_path, 'best_model.pt'))
 
 
-        # save the best model so far 
-        mean_test =  np.mean(test_loss_list)
-        if best_test_error > mean_test:
-            best_test_error = mean_test
-            torch.save(model.state_dict(), os.path.join(train_path, 'best_model.pt'))
+        print('Finished training TS2VEC')
 
 
-    print('Finished training TS2VEC')
-    
 
-    return train_loss_save, test_loss_save, train_accuracy_save, test_accuracy_save, base
 
 
 
@@ -495,43 +382,52 @@ def train(classifier,
 
 
 if __name__ == '__main__':
-    from dataloader import PTB_XL
-    dataset = PTB_XL()
+    DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+    print(f"device: {DEVICE}")
+
+
+    from BACHELOR_THESIS.dataset import PTB_XL
+    dataset = PTB_XL('/Users/nikolajhertz/Desktop/GIT/BACHELOR_THESIS/code/data/PTB_XL')
 
     from utils import train_test_dataset
     train_dataset, test_dataset = train_test_dataset(dataset=dataset,
                                                         test_proportion=0.1,
                                                         verbose=True,
                                                         seed=0,
-                                                        return_stand=True)
+                                                        return_stand=False)
     
 
-    crop = RandomCropping(False)
+    test = Encoder(12, 64, 320, 0.2, DEVICE)
+    print(test(torch.tensor(train_dataset[0][0]).float().view(1,1000,12)))
 
-    signal_aug_1, signal_aug_2, crop_l = crop(torch.from_numpy(train_dataset[0][0]).reshape(1, 1000, 12))
-    import matplotlib.pyplot as plt
-    fig, ax = plt.subplots(1, 2)
-    ax[0].plot(signal_aug_1.view(-1, 12).detach())
-    ax[1].plot(signal_aug_2.view(-1, 12).detach())
-    plt.show()
 
-    model = TS2VEC(input_dim=12, 
-                   output_dim=16, 
-                   p=0.5, 
-                   device=DEVICE, 
-                   verbose=True).to(DEVICE)
+    # crop = RandomCropping(False)
+
+    # signal_aug_1, signal_aug_2, crop_l = crop(torch.from_numpy(train_dataset[0][0]).reshape(1, 1000, 12))
+    # import matplotlib.pyplot as plt
+    # fig, ax = plt.subplots(1, 2)
+    # ax[0].plot(signal_aug_1.view(-1, 12).detach())
+    # ax[1].plot(signal_aug_2.view(-1, 12).detach())
+    # plt.show()
+
+    # model = TS2VEC(input_dim=12, 
+    #                output_dim=16, 
+    #                p=0.5, 
+    #                device=DEVICE, 
+    #                verbose=True).to(DEVICE)
     
     
 
-    train()
+    # train()
 
-    z1 = model.forward(signal_aug_1.float())
-    z2 = model.forward(signal_aug_2.float())
-
-
+    # z1 = model.forward(signal_aug_1.float())
+    # z2 = model.forward(signal_aug_2.float())
 
 
-    z1 = z1.reshape(-1, 1000, 16)
-    z2 = z2.reshape(-1, 1000, 16)
 
-    test_loss = hierarchical_contrastive_loss(z1,  z2)
+
+    # z1 = z1.reshape(-1, 1000, 16)
+    # z2 = z2.reshape(-1, 1000, 16)
+
+    # test_loss = hierarchical_contrastive_loss(z1,  z2)

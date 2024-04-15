@@ -4,6 +4,19 @@ import os
 from torch.utils.data import DataLoader, Subset
 from sklearn.model_selection import train_test_split
 import numpy as np
+import torch
+import random
+
+def random_seed(random_seed):
+    """
+    Function to seed the data-split and backpropagation (to enforce reproducibility)
+    """
+    torch.manual_seed(random_seed)
+    torch.cuda.manual_seed(random_seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    np.random.seed(random_seed)
+    random.seed(random_seed)
 
 
 def save_parameters(save_path, dictionary):
@@ -50,9 +63,14 @@ def train_test_dataset(dataset,
         for i in range(len(train_dataset)):
             X[i,:,:] = train_dataset[i][0]
 
-        return train_dataset, test_dataset, np.mean(X), np.std(X)
+            
+        # save in the class
+        train_dataset.mean = np.mean(X)
+        train_dataset.std = np.std(X)
+        test_dataset.mean = np.mean(X)
+        test_dataset.std = np.std(X)
 
-    return train_dataset, test_dataset
+    return train_dataset, test_dataset#, 0, 1
 
 def baseline(train_dataset, test_dataset):
 
@@ -100,6 +118,55 @@ class random_cropping:
         return (x[a1:b1, :], 
                 x[a2:b2, :], 
                 {'a1': a1.item(), 'a2': a2.item(), 'b1': b1.item(), 'b2': b2.item()})
+
+def cool_plots():
+    # plot settings
+    import scienceplots
+    import matplotlib.pyplot as plt
+    plt.style.use('science')
+    plt.rcParams.update({'figure.dpi': '200'})
+    plt.rcParams.update({"legend.frameon": True})
+
+
+# class CNN_block(nn.Module):
+#     """
+#     dumped
+#     """
+#     def __init__(self, l, dim):
+#         super().__init__()
+#         self.conv1 = nn.Conv1d(dim, dim, padding='same', kernel_size=3, dilation=2**l)
+#         self.conv2 = nn.Conv1d(dim, dim, padding='same', kernel_size=3, dilation=2**l)
+
+#     def forward(self, x):
+#         residual = x
+#         x = self.conv1(x)
+#         x = nn.ReLU()(x)
+#         x = self.conv2(x)
+
+#         return x + residual
+
+
+# class dilated_CNN_layer(nn.Module):
+#     """
+#     dumped
+#     """
+#     """
+#     Hmm a bit difficult.
+
+#     Ten residual blocks
+#     """
+#     def __init__(self, dim):
+#         super().__init__()
+#         self.CNN = nn.Sequential(*[
+#             CNN_block(l=i, dim=dim) 
+#             for i in range(10)
+#         ])
+
+    
+#     def __call__(self, x):
+#         # input x is (batch_size, T, dimension)
+#         return self.CNN(x)
+
 
 if __name__ =='__main__':
     save_parameters('', test='hej', test2='hej2', test3='hej4')
