@@ -287,23 +287,27 @@ class TS2VEC(nn.Module):
             # evaluating each batch
             for i, (X, Y) in tqdm(enumerate(train_dataloader)):
                 
-                X = X.to(self.device)
+                X = X.to(self.device) # N x T x D
                 
                 # random crop two overlapping augments:
                 crop = RandomCropping()
 
-                signal_aug_1, signal_aug_2, crop_l, _ = crop(X)
+                print(X.shape)
+                
+                signal_aug_1, signal_aug_2, crop_l, _ = crop(X) # (N x T1 x D) & (N x T2 & D)
                 
                 # reset gradients
                 optimizer.zero_grad()
 
                 # input augments to model
-                z1 = self.model.forward(signal_aug_1.float())
-                z2 = self.model.forward(signal_aug_2.float())
+                z1 = self.model.forward(signal_aug_1.float()) # (N x T1 x Dr)
+                z2 = self.model.forward(signal_aug_2.float()) # (N x T2 x Dr)
+                
 
                 # evaluate the loss on the overlapping part
                 # TODO: Why only on the overlapping part?
                 train_loss = hierarchical_contrastive_loss(z1[:, -crop_l:],  z2[:,:crop_l])
+
 
                 # calculate gradients
                 train_loss.backward()
@@ -383,52 +387,43 @@ class TS2VEC(nn.Module):
 
 
 if __name__ == '__main__':
+    # load data
     DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     print(f"device: {DEVICE}")
 
+    #from dataset import PTB_XL
+    #dataset = PTB_XL()
 
-    from BACHELOR_THESIS.dataset import PTB_XL
-    dataset = PTB_XL('/Users/nikolajhertz/Desktop/GIT/BACHELOR_THESIS/code/data/PTB_XL')
+    from dataset import AEON_DATA
+    dataset = AEON_DATA('ElectricDevices')
 
+    # create train/test-split
     from utils import train_test_dataset
     train_dataset, test_dataset = train_test_dataset(dataset=dataset,
-                                                        test_proportion=0.1,
-                                                        verbose=True,
-                                                        seed=0,
-                                                        return_stand=False)
-    
+                                                     test_proportion=0.3,
+                                                     train_size=10,
+                                                     test_size=10,
+                                                     seed=0,
+                                                     return_stand=False)
+                                                    
+    # Either train a model or load existing model
 
-    test = Encoder(12, 64, 320, 0.2, DEVICE)
-    print(test(torch.tensor(train_dataset[0][0]).float().view(1,1000,12)))
+    from TS2VEC import TS2VEC
 
+    model = TS2VEC(input_dim=1,
+                    hidden_dim=64,
+                    output_dim=320,
+                    p=0.5,
+                    device=DEVICE)
 
-    # crop = RandomCropping(False)
-
-    # signal_aug_1, signal_aug_2, crop_l = crop(torch.from_numpy(train_dataset[0][0]).reshape(1, 1000, 12))
-    # import matplotlib.pyplot as plt
-    # fig, ax = plt.subplots(1, 2)
-    # ax[0].plot(signal_aug_1.view(-1, 12).detach())
-    # ax[1].plot(signal_aug_2.view(-1, 12).detach())
-    # plt.show()
-
-    # model = TS2VEC(input_dim=12, 
-    #                output_dim=16, 
-    #                p=0.5, 
-    #                device=DEVICE, 
-    #                verbose=True).to(DEVICE)
-    
-    
-
-    # train()
-
-    # z1 = model.forward(signal_aug_1.float())
-    # z2 = model.forward(signal_aug_2.float())
-
-
-
-
-    # z1 = z1.reshape(-1, 1000, 16)
-    # z2 = z2.reshape(-1, 1000, 16)
-
-    # test_loss = hierarchical_contrastive_loss(z1,  z2)
+    model.train(train_dataset=train_dataset,
+                test_dataset=test_dataset,
+                n_epochs=10,
+                batch_size=5,
+                learning_rate=0.001,
+                grad_clip=None,
+                wandb=None,
+                train_path=None,
+                t_sne=False,
+                classifier='logistic',)

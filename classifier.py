@@ -32,11 +32,17 @@ def classifier_train(classifier_name,
 
     
     for i, (X, y) in tqdm(enumerate(train_loader)):
-        z = model(X.to(device).float())
+        z = model(X.to(device).float()) # output: N x T x Dr
+        
+        
+        z = z.transpose(1,2) # N x Dr x T
+
 
         # Maxpooling is inspried by the TS2VEC framework for classification
         #   maxpooling over time instances!
-        z = F.max_pool1d(z, kernel_size=z.shape[2])
+        
+
+        z = F.max_pool1d(z, kernel_size=z.shape[2]) # N x Dr
 
         z = z.detach().cpu().numpy().reshape(z.shape[0], -1)
 
