@@ -40,7 +40,7 @@ parser.add_argument('--dataset', default='PTB_XL')
 parser.add_argument('-id', '--input_dim', default=12, type=int)
 parser.add_argument('-v', '--verbose', action='store_true')
 parser.add_argument('-n', '--normalize', action='store_true')
-parser.add_argument('--seed', default=None)
+parser.add_argument('--seed', default=None, type=int)
 parser.add_argument('--t-sne', action='store_true')
 parser.add_argument('--model_path', default=None, nargs='+')
 
