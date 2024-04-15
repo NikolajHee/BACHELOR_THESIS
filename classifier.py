@@ -13,6 +13,7 @@ def classifier_train(classifier_name,
                     test_loader,
                     device):
     output_dim = model.module.output_dim
+    print(output_dim)
 
     if classifier_name == 'svc':
         classifier = svm.SVC(kernel='rbf') 
