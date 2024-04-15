@@ -44,7 +44,10 @@ def tsne(H,
 
         # Maxpooling is inspried by the TS2VEC framework for classification
         #   maxpooling over time instances!
-        #  
+        #  TODO: What about TSNE though???
+        z = z.transpose(1,2) # N x Dr x T
+
+
         z = F.max_pool1d(z, kernel_size=z.shape[2])
 
         z = z.detach().cpu().numpy().reshape(z.shape[0], -1)
@@ -74,6 +77,8 @@ def tsne(H,
 
     for i, (X, y) in tqdm(enumerate(test_dataloader)):
         z = H.forward(X.to(device).float())
+
+        z = z.transpose(1,2) # N x Dr x T
 
         # Maxpooling is inspried by the TS2VEC framework for classification
         # do they also do this when they are plotting tsne?
