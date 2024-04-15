@@ -332,7 +332,7 @@ class TS2VEC(nn.Module):
 
             # TODO: Fix below
             # log the loss in WandB
-            wandb.log({"tsloss/hierarchical_contrastive_loss": np.mean(train_loss_list)})
+            #wandb.log({"tsloss/hierarchical_contrastive_loss": np.mean(train_loss_list)})
 
             # test the representations by classifying the labels
             if classifier and ((epoch%10==0) or (epoch == n_epochs-1)):

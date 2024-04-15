@@ -15,8 +15,8 @@ import os
 
 # main function
 def tsne(H, 
-         train_dataset,
-         test_dataset,
+         train_dataloader,
+         test_dataloader,
          output_dim,
          device,
          save_path):
@@ -28,8 +28,6 @@ def tsne(H,
     device : the torch_device where the models resides. 
     save_path : where to save the png's
     """
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
 
     batch_size = train_dataloader.batch_size
     train_batches, test_batches = len(train_dataloader), len(test_dataloader)
