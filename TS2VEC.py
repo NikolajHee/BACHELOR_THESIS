@@ -273,6 +273,31 @@ class TS2VEC(nn.Module):
         # same optimizer as ts2vec; experiment with other choices
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=learning_rate, weight_decay=0.01)
         
+        
+        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
+        test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
+
+        # test the representations by clustering (with self-organizing maps)
+        if t_sne:
+            print("Clustering...")
+            fig_train, fig_test = tsne(self.model,
+                                       train_dataloader=train_dataloader,
+                                       test_dataloader=test_dataloader,
+                                       device=self.device)
+            
+            wandb.log({"t_sne/train_t_sne": fig_train, "t_sne/test_t_sne": fig_test})
+
+        # test the representations by classifying the labels
+        if classifier:
+            print("Classifying...")
+            train_accuracy, test_accuracy = classifier_train(classifier, 
+                                                             self.model, 
+                                                             train_loader=train_dataloader, 
+                                                             test_loader=test_dataloader, 
+                                                             device=self.device)
+
+            wandb.log({"classifier/train_accuracy": train_accuracy, "classifier/test_accuracy": test_accuracy})
+
         # main training loop
         for epoch in range(n_epochs):
             # new shuffle for each epoch
@@ -323,8 +348,10 @@ class TS2VEC(nn.Module):
                 self.model.update_parameters(self.encoder)
 
                 train_loss_list.append(train_loss.item())
-                
+            
+            print('-'*20)
             print(f"Epoch {epoch}. Train loss {np.mean(train_loss_list)}.")
+            print('-'*20)
             
             # ensure model test-mode
             self.model.module.test, self.encoder.test = False, False
@@ -336,6 +363,7 @@ class TS2VEC(nn.Module):
 
             # test the representations by classifying the labels
             if classifier and ((epoch%10==0) or (epoch == n_epochs-1)):
+                print("Classifying...")
                 train_accuracy, test_accuracy = classifier_train(classifier, 
                                                                 self.model, 
                                                                 train_loader=train_dataloader, 
@@ -351,6 +379,7 @@ class TS2VEC(nn.Module):
 
             # test the representations by clustering (with self-organizing maps)
             if t_sne and ((epoch%10==0) or (epoch == n_epochs-1)):
+                print("Clustering...")
                 fig_train, fig_test = tsne(self.model,
                                     train_dataloader=train_dataloader,
                                     test_dataloader=test_dataloader,
