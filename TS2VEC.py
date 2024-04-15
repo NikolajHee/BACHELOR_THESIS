@@ -131,6 +131,7 @@ class Encoder(nn.Module):
         super().__init__()
         # Input Projection Layer (outputs feature for each timestamp)
         self.p = p
+        self.output_dim = output_dim
 
         # initialising layers
         self.input_project_layer = nn.Linear(in_features=input_dim, 
