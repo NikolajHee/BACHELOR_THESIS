@@ -1,18 +1,14 @@
 """
 Main script of the Bachelor Thesis. 
 
-TODO: Insert Seed
-
 The script can be executed in two ways:
 
 1. As a sweep:
     - The script will execute the main function with all possible combinations of the arguments.
     - The sweep will be saved on wandb.
-    - The sweep will be executed on wandb.
 
 2. As a single value training:
-    - The script will execute the main functi<on with the given arguments.
-    - The results will be saved in a folder named after the current date and time.
+    - The script will execute the main function with the given arguments.
 """
 
 
@@ -56,6 +52,12 @@ parser.add_argument('-p', default=[0.5], type=float, nargs='+')
 parser.add_argument('-gc', '--grad_clip', default=[None], type=float, nargs='+')
 parser.add_argument('--N_train', default=[None], type=int, nargs='+')
 parser.add_argument('--N_test', default=[None], type=int, nargs='+')
+parser.add_argument('--alpha', default=[0.5], type=float, nargs='+')
+
+# manual features
+parser.add_argument('--manual-features', action='store_true')
+
+
 
 
 
@@ -70,6 +72,7 @@ arguments = vars(args)
 #* train function ; can be executed both by a sweep, or a by single values
 def main(sweep=True):
     if sweep:
+        print("initializing sweep")
         results_path = 'results/sweep'
 
         now = datetime.now()
@@ -79,6 +82,7 @@ def main(sweep=True):
                    name=dt_string)
 
     else:
+        print("initializing single value training")
         results_path = 'results'
 
         now = datetime.now()
@@ -108,6 +112,12 @@ def main(sweep=True):
 
     print(f"using the data {config.dataset}")
 
+
+    if config.manual_features:
+        from manual_features import model
+        return
+
+
     # create train/test-split
     from utils import train_test_dataset
     train_dataset, test_dataset = train_test_dataset(dataset=dataset,
@@ -134,6 +144,7 @@ def main(sweep=True):
                     batch_size=config.batch_size,
                     learning_rate=config.learning_rate,
                     grad_clip=config.grad_clip,
+                    alpha=config.alpha,
                     wandb=wandb,
                     train_path=save_path,
                     t_sne=config.t_sne,
