@@ -67,7 +67,7 @@ def main():
 
 sweep_configuration = {
     "method": "grid",
-    "metric": {"name": "tsloss/test_loss", "goal": "minimize"},
+    "metric": {"name": "test_accuracy", "goal": "minimize"},
     "parameters": {
         'num_kernels' : {"values": [8, 16, 32, 64, 128, 256, 512, 1024]},
     },
