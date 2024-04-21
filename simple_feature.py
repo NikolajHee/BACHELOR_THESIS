@@ -5,12 +5,7 @@ import wandb
 
 
 
-
-
-
 path_to_data = '/Users/nikolajhertz/Desktop/GIT/BACHELOR_THESIS/code/data/PTB_XL'
-
-
 
 
 def main():
@@ -67,7 +62,7 @@ def main():
 
 sweep_configuration = {
     "method": "grid",
-    "metric": {"name": "test_accuracy", "goal": "minimize"},
+    "metric": {"name": "test_accuracy", "goal": "maximize"},
     "parameters": {
         'num_kernels' : {"values": [8, 16, 32, 64, 128, 256, 512, 1024]},
     },
