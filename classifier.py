@@ -10,12 +10,13 @@ import numpy as np
 from sklearn import svm
 import torch.nn.functional as F
 from utils import baseline
+from torch.utils.data import DataLoader
 
 
-def classifier_train(classifier_name, 
+def classifier_train(classifier_name:str, 
                      model, 
-                     train_loader,
-                     test_loader,
+                     train_loader:DataLoader,
+                     test_loader:DataLoader,
                      device):
     """
     Classifier training function.
