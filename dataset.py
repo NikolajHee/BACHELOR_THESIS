@@ -141,7 +141,6 @@ class PTB_XL(Dataset):
             signal = self.normalize(wfdb.rdsamp(image_path)[0])
             if not self.ml:
                 label = self.df.binary_label[idx]
-                print(label)
             else:
                 label = self.df.iloc[idx,-5:].values
             
