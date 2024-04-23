@@ -12,7 +12,7 @@ import os
 
 
 def cca(model, 
-        train_loader:DataLoader,
+        train_loader,
         test_loader:DataLoader,
         device,
         save_path:str):
