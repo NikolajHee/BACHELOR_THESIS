@@ -116,7 +116,7 @@ class PTB_XL(Dataset):
         return len(self.paths)
 
     def __getitem__(self, idx):
-        print(idx)
+        #print(idx)
         if type(idx) is np.ndarray:
             idx = list(idx)
 
