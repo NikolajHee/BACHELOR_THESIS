@@ -91,7 +91,7 @@ def tsne(H,
 
     # TODO: transform or fit_transform?
     # perform t-SNE
-    self_organized_map = model_.transform(Z_test)
+    self_organized_map = model_.fit_transform(Z_test)
 
     # plot the t-SNE
     fig_test, ax2 = plt.subplots()
