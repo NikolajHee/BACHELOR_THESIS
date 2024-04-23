@@ -9,11 +9,13 @@ Pytorch dataloaders.
 import os
 import ast
 import wfdb
+import torch
 import pickle
 import numpy as np
 import pandas as pd
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 from sklearn.preprocessing import LabelEncoder
+
 from aeon.datasets import load_classification
 
 
@@ -114,6 +116,7 @@ class PTB_XL(Dataset):
         return len(self.paths)
 
     def __getitem__(self, idx):
+        print(idx)
         if type(idx) is np.ndarray:
             idx = list(idx)
 
@@ -123,7 +126,7 @@ class PTB_XL(Dataset):
             if not self.ml:
                 label = self.df.binary_label[idx]
             else:
-                label = self.df.iloc[idx,-5:].values
+                label = self.df.iloc[idx,-5:]
             
             #label = self.df['test'][idx]
         elif (type(idx) is tuple) or (type(idx) is list):
@@ -132,7 +135,7 @@ class PTB_XL(Dataset):
             if not self.ml:
                 label = [self.df.binary_label[i] for i in idx]
             else:
-                label = [self.df.iloc[i,-5:].values for i in idx]
+                label = [self.df.iloc[i,-5:] for i in idx]
             
             #label = [self.df['test'][i] for i in idx]
         else:
@@ -142,11 +145,11 @@ class PTB_XL(Dataset):
             if not self.ml:
                 label = self.df.binary_label[idx]
             else:
-                label = self.df.iloc[idx,-5:].values
+                label = self.df.iloc[idx,-5:]
             
             #label = self.df['test'][idx]
-
-        return signal, label
+        
+        return torch.tensor(signal), torch.tensor(label)
 
 
 
@@ -183,7 +186,13 @@ class AEON_DATA(Dataset):
 if __name__ == '__main__':        
     data = PTB_XL('/Users/nikolajhertz/Desktop/GIT/BACHELOR_THESIS/code/data/PTB_XL', multi_label=True)
 
-    print(data[0:10])
+    #print(data[0:10])
+
+    loader = DataLoader(data, batch_size=32, shuffle=True)
+
+    print('test')
+
+    print(next(iter(loader)))
 
     #print(data[1,10,20])
 
