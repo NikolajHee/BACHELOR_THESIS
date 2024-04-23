@@ -183,7 +183,7 @@ def main(sweep=True):
             test_dataloader = DataLoader(test_dataset, batch_size=config.batch_size, shuffle=True, drop_last=True)
 
             from cda import cca
-            cca(model=model,
+            cca(model=model.model,
                 train_loader=train_dataloader,
                 test_loader=test_dataloader,
                 device=DEVICE,
