@@ -56,7 +56,8 @@ def tsne(H,
         Y_train[i*batch_size:(i+1)*batch_size] = y.reshape(batch_size)
 
     # perform t-SNE
-    tsne = TSNE(n_components=2).fit_transform(Z_train)
+    model_ = TSNE(n_components=2)
+    self_organized_map = model_.fit_transform(Z_train)
 
     # plot the t-SNE
     fig_train, ax1 = plt.subplots()
@@ -64,7 +65,7 @@ def tsne(H,
     classes = np.unique(Y_train)
     for _class in classes:
         index = Y_train == _class
-        ax1.plot(tsne[index,0], tsne[index,1], '.', label = str(_class))
+        ax1.plot(self_organized_map[index,0], self_organized_map[index,1], '.', label = str(_class))
     plt.legend()
     plt.close()
 
@@ -90,7 +91,7 @@ def tsne(H,
 
     # TODO: transform or fit_transform?
     # perform t-SNE
-    tsne = TSNE(n_components=2).transform(Z_test)
+    self_organized_map = model_(n_components=2).transform(Z_test)
 
     # plot the t-SNE
     fig_test, ax2 = plt.subplots()
@@ -98,7 +99,7 @@ def tsne(H,
     classes = np.unique(Y_test)
     for _class in classes:
         index = Y_test == _class
-        ax2.plot(tsne[index,0], tsne[index,1], '.', label = str(_class))
+        ax2.plot(self_organized_map[index,0], self_organized_map[index,1], '.', label = str(_class))
     plt.legend()
     plt.close()
 
