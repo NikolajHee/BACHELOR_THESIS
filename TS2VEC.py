@@ -431,6 +431,68 @@ class TS2VEC(nn.Module):
 
 
         print('Finished training TS2VEC')
+    
+
+    def temp(self, 
+             dataset, 
+             n_epochs, 
+             batch_size, 
+             learning_rate, 
+             grad_clip, 
+             alpha, 
+             wandb, 
+             train_path):
+        optimizer = torch.optim.AdamW(self.model.parameters(), lr=learning_rate, weight_decay=0.01)
+        
+        
+
+        # main training loop
+        for epoch in tqdm(range(n_epochs)):
+            dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, drop_last=True)
+
+            # ensure training mode
+            self.model.module.test, self.encoder.test = False, False
+
+
+            train_loss_list = []
+
+            # evaluating each batch
+            for i, (X, Y) in enumerate(dataloader):
+                
+                X = X.to(self.device) # N x T x D
+                
+                # random crop two overlapping augments:
+                crop = RandomCropping()
+
+                #print(X.shape)
+                
+                signal_aug_1, signal_aug_2, crop_l, _ = crop(X) # (N x T1 x D) & (N x T2 & D)
+                
+                # reset gradients
+                optimizer.zero_grad()
+
+                # input augments to model
+                z1 = self.model.forward(signal_aug_1.float()) # (N x T1 x Dr)
+                z2 = self.model.forward(signal_aug_2.float()) # (N x T2 x Dr)
+                
+
+                # evaluate the loss on the overlapping part
+                train_loss = hierarchical_contrastive_loss(z1[:, -crop_l:],  z2[:,:crop_l], alpha=alpha)
+
+                train_loss_list.append(train_loss)
+
+                # calculate gradients
+                train_loss.backward()
+                
+                # clip gradient
+                if grad_clip is not None:
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), grad_clip)
+                
+                # take gradient step
+                optimizer.step()
+
+                # Update the paraemters of the model
+                self.model.update_parameters(self.encoder)
 
 
 
