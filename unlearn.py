@@ -127,21 +127,20 @@ if args.strategy == 'data_pruning':
     acc = data_pruning.train(n_epochs=args.n_epochs, 
                              batch_size=args.batch_size, 
                              learning_rate=args.learning_rate, 
-                             grad_clip=None, 
-                             alpha=0.5, 
+                             grad_clip=args.grad_clip, 
+                             alpha=args.alpha, 
                              wandb=wandb, 
                              save_path=save_path, 
                              time_taking=time,
                              test_dataset=test_dataset)
 
-    print(acc)
 
     data_pruning.unlearn(indices=train_dataset.indices[0:3],
                          n_epochs=args.n_epochs,
                          batch_size=args.batch_size,
                          learning_rate=args.learning_rate,
-                         grad_clip=None,
-                         alpha=0.5,
+                         grad_clip=args.grad_clip,
+                         alpha=args.alpha,
                          wandb=wandb,
                          save_path=save_path,
                          time_taking=time,
