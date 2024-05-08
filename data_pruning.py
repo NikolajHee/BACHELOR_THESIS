@@ -250,13 +250,13 @@ class Pruning:
         
         
         # majority voting
-        votes = mode(test_predictions)[0]
+        votes = mode(test_predictions, keepdims=False)[0]
 
         accuracy = np.mean(Y_test.squeeze().numpy() == votes.ravel())
 
         # majority voting
         if self.data.unlearned_points is not None:
-            votes = mode(unlearn_predictions)[0]
+            votes = mode(unlearn_predictions, keepdims=False)[0]
 
             unlearn_accuracy = np.mean(Y_unlearn.squeeze().numpy() == votes.ravel())
 
