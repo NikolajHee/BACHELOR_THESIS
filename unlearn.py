@@ -80,7 +80,7 @@ if args.seed:
     random_seed(args.seed)
 
 from dataset import PTB_XL
-dataset = PTB_XL('/Users/nikolajhertz/Desktop/GIT/BACHELOR_THESIS/code/data/PTB_XL')
+dataset = PTB_XL()
 
 from utils import train_test_dataset
 train_dataset, test_dataset = train_test_dataset(dataset=dataset,
