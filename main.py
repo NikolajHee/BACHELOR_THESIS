@@ -36,7 +36,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('--dataset', default='PTB_XL') 
 parser.add_argument('-id', '--input_dim', default=12, type=int)
 parser.add_argument('-v', '--verbose', action='store_true')
-parser.add_argument('-n', '--normalize', action='store_true')
+parser.add_argument('-n', '--normalize', default='off', choices=['on', 'off'], type=str, nargs='+')
 parser.add_argument('--cda', action='store_true')
 parser.add_argument('--seed', default=None, type=int)
 parser.add_argument('--t-sne', action='store_true')
@@ -151,7 +151,7 @@ def main(sweep=True):
                                                      test_proportion=0.3,
                                                      train_size=arguments['N_train'],
                                                      test_size=arguments['N_test'],
-                                                     return_stand=arguments['normalize'])
+                                                     return_stand=arguments['normalize'] == 'on')
                                                     
     # Either train a model or load existing model
     if not arguments['model_path']:
