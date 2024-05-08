@@ -177,6 +177,8 @@ class Pruning:
         self.models = []
         self.classifiers = []
 
+        self.device = device
+
         self.model_settings = {'input_dim': input_dim,
                                'hidden_dim': hidden_dim,
                                'output_dim': output_dim,
@@ -199,7 +201,7 @@ class Pruning:
                X):
         
             # encode the data
-            z = model.model(X.float())
+            z = model.model(X.float().to(self.device))
 
             # maxpool over time dimension
             z = z.transpose(1,2)
