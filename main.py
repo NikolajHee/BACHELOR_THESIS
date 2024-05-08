@@ -44,7 +44,7 @@ parser.add_argument('--model_path', default=None, nargs='+')
 
 
 # variables that can be sweeped
-parser.add_argument('-c', '--classifier', default=None, choices=['logistic', 'svc'], nargs='+')
+parser.add_argument('-c', '--classifier', default=None, choices=['logistic', 'svc', 'knn'], nargs='+')
 parser.add_argument('-hd', '--hidden_dim', default=64, type=int, nargs='+')
 parser.add_argument('-od', '--output_dim', default=320, type=int, nargs='+')
 parser.add_argument('-bs', '--batch_size', default=8, type=int, nargs='+')
@@ -230,8 +230,6 @@ def main(sweep=True):
 
 
 
-bayes = True
-
 # execute main function (sweep or single value training)
 if any([len(i) > 1 for i in arguments.values() if type(i) == list]):
     print("initializing sweep")
@@ -251,10 +249,15 @@ if any([len(i) > 1 for i in arguments.values() if type(i) == list]):
         "name": "sweep_bayes_TS2VEC",
         "metric": {"name": "tsloss/hierarchical_contrastive_loss", "goal": "minimize"},
         "parameters": {
-            i : {"min": j[0], "max": j[1]} for (i,j) in arguments.items() if (type(j) == list) and (len(j) == 2)
+            i : {"min": j[0], "max": j[1]} for (i,j) in arguments.items() if (type(j) == list) and (len(j) == 2) and ((type(j[0]) is int) or (type(j[0]) is float))
         },
     }
 
+    for (i,j) in arguments.items():
+        if (type(j) == list) and (len(j) > 1) and ((type(j[0]) is not int) and (type(j[0]) is not float)):
+            sweep_configuration['parameters'][i] = {'values': j}
+
+    print(sweep_configuration)
     #print(sweep_configuration['parameters'])
 
     sweep_id = wandb.sweep(sweep=sweep_configuration, project="BACHELOR_THESIS")
