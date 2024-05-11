@@ -480,7 +480,7 @@ class TS2VEC(nn.Module):
                 # evaluate the loss on the overlapping part
                 train_loss = hierarchical_contrastive_loss(z1[:, -crop_l:],  z2[:,:crop_l], alpha=alpha)
 
-                train_loss_list.append(train_loss)
+                train_loss_list.append(train_loss.item())
 
                 # calculate gradients
                 train_loss.backward()
