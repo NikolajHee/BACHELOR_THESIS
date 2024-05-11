@@ -213,7 +213,7 @@ class Pruning:
             return z
 
     def evaluate_classifiers(self, test_dataset):
-        torch.cuda.empty_cache()
+        
         unlearn_accuracy = None
 
         X_test, Y_test = self.collect_matrix(test_dataset)
@@ -249,8 +249,6 @@ class Pruning:
             i+=1
         
         
-
-
         # majority voting
         votes = mode(test_predictions, keepdims=False)[0]
 
@@ -336,19 +334,21 @@ class Pruning:
 
             for i, model in enumerate(self.models):
 
-                model.temp(dataset=self.data.slices[i][j],
-                            n_epochs=n_epochs[j],
-                            batch_size=batch_size,
-                            learning_rate=learning_rate,
-                            grad_clip=grad_clip,
-                            alpha=alpha,
-                            wandb=wandb,
-                            train_path=save_path)
+                loss = model.temp(dataset=self.data.slices[i][j],
+                                n_epochs=n_epochs[j],
+                                batch_size=batch_size,
+                                learning_rate=learning_rate,
+                                grad_clip=grad_clip,
+                                alpha=alpha,
+                                wandb=wandb,
+                                train_path=save_path)
                 
 
                 
                 torch.save(model.model.state_dict(), 
                            os.path.join(save_path, f'shard_{i}', f'slice_{j}', 'model.pt'))
+                
+                wandb.log({f'loss_model{i}': np.mean(loss)})
 
             test_accuracy[j], _ = self.evaluate_classifiers(test_dataset=test_dataset)
             if wandb is not None: 
