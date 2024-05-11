@@ -213,7 +213,7 @@ class Pruning:
             return z
 
     def evaluate_classifiers(self, test_dataset):
-        
+        torch.cuda.empty_cache()
         unlearn_accuracy = None
 
         X_test, Y_test = self.collect_matrix(test_dataset)
@@ -249,6 +249,8 @@ class Pruning:
             i+=1
         
         
+
+
         # majority voting
         votes = mode(test_predictions, keepdims=False)[0]
 
