@@ -230,9 +230,9 @@ class Pruning:
 
         i = 0
         for model, classifier in zip(self.models, self.classifiers):
-            X_train, Y_train = self.collect_matrix(self.data.shards[i])
+            Z_train, Y_train = self.collect_matrix2(model, self.data.shards[i])
 
-            Z_train = self.encode(model, X_train) #TODO : maybe move into TS2Vec
+            #Z_train = self.encode(model, X_train) #TODO : maybe move into TS2Vec
 
             classifier.fit(Z_train, Y_train.squeeze())
 
@@ -274,6 +274,19 @@ class Pruning:
         y = torch.zeros((N, output_dim))
         for i in range(len(dataset)):
             X[i], y[i, :] = dataset[i]
+
+        return X, y
+    
+    def collect_matrix2(self, model, dataset):
+        N = len(dataset)
+        z_dim = model.output_dim
+
+        output_dim = dataset[0][1].shape if dataset[0][1].shape else 1
+            
+        X = torch.zeros((N, z_dim))
+        y = torch.zeros((N, output_dim))
+        for i in range(len(dataset)):
+            X[i], y[i, :] = self.encode(model, dataset[i])
 
         return X, y
 
