@@ -447,7 +447,7 @@ class TS2VEC(nn.Module):
         
 
         # main training loop
-        for epoch in tqdm(range(n_epochs)):
+        for epoch in range(n_epochs):
             dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, drop_last=True)
 
             # ensure training mode
