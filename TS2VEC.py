@@ -495,7 +495,7 @@ class TS2VEC(nn.Module):
                 # Update the paraemters of the model
                 self.model.update_parameters(self.encoder)
             
-            loss_save[i] = np.mean(train_loss_list)
+            loss_save[epoch] = np.mean(train_loss_list)
         
         return loss_save
 
