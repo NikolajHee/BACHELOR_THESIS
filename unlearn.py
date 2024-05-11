@@ -72,7 +72,7 @@ now = datetime.now()
 dt_string = now.strftime("(%d_%m_%Y)_(%H_%M_%S)")
 
 wandb.init(project="BACHELOR_THESIS",
-            name=dt_string,
+            name='UNLEARNING',
             config=arguments)
 
 if args.seed:
@@ -133,7 +133,12 @@ if args.strategy == 'data_pruning':
                              save_path=save_path, 
                              time_taking=time,
                              test_dataset=test_dataset)
+    
+    print('-'*20)
+    print("UNLEARNING")
+    print('-'*20)
 
+    print(f'Accuracy: {acc}')
 
     data_pruning.unlearn(indices=train_dataset.indices[0:3],
                          n_epochs=args.n_epochs,

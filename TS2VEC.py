@@ -335,7 +335,7 @@ class TS2VEC(nn.Module):
             train_loss_list = []
 
             # evaluating each batch
-            for i, (X, Y) in tqdm(enumerate(train_dataloader)):
+            for i, (X, Y) in enumerate(train_dataloader):
                 
                 X = X.to(self.device) # N x T x D
                 

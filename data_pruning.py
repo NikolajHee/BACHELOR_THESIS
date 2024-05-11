@@ -328,6 +328,8 @@ class Pruning:
         test_accuracy = np.zeros(((self.data.N_slices)))
 
         for j in range(self.data.N_slices):
+
+            print(f"Training model {j}.")
             
 
             for i, model in enumerate(self.models):
@@ -536,7 +538,10 @@ if __name__ == '__main__':
                 save_path=save_path, 
                 time_taking=time,
                 test_dataset=test_dataset)
-
+    
+    print('-'*20)
+    print("UNLEARNING")
+    print('-'*20)
     print(acc)
 
     test2.unlearn(indices=train_dataset.indices[0:3],
