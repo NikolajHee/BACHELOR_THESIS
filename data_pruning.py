@@ -287,7 +287,7 @@ class Pruning:
         Z = np.zeros((N, z_dim))
         y = np.zeros((N, output_dim))
         for i in range(len(dataset)):
-            X, y[i, :] = dataset[i][0].numpy(), dataset[i][1].numpy()
+            X, y[i, :] = dataset[i][0], dataset[i][1].numpy()
             Z[i] = self.encode(model, X[None,:,:])
 
         return Z, y
