@@ -284,10 +284,10 @@ class Pruning:
 
         output_dim = dataset[0][1].shape if dataset[0][1].shape else 1
             
-        Z = torch.zeros((N, z_dim))
-        y = torch.zeros((N, output_dim))
+        Z = np.zeros((N, z_dim))
+        y = np.zeros((N, output_dim))
         for i in range(len(dataset)):
-            X, y[i, :] = dataset[i]
+            X, y[i, :] = dataset[i].numpy()
             Z[i] = self.encode(model, X.view(1,T,d))
 
         return Z, y
