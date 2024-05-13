@@ -147,5 +147,5 @@ if __name__ == '__main__':
         train_loader=train_dataloader, 
         test_loader=test_dataloader, 
         device=DEVICE, 
-        save_path='')
+        save_path='cca_save')
                                                  
