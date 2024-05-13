@@ -131,7 +131,7 @@ if __name__ == '__main__':
 
     model.model.load_state_dict(torch.load(path, map_location=torch.device('cpu')))
 
-    cca(None, 
+    cca(model, 
         train_loader=train_dataloader, 
         test_loader=test_dataloader, 
         device=DEVICE, 
