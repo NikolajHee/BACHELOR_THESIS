@@ -57,9 +57,9 @@ def cca(model,
 
     # Perform CCA
     print('fitting CCA')
-    model_ = CCA(n_components=2)
+    model_ = CCA(n_components=5)
 
-    model_.fit(Z_train.T, Y_train) 
+    model_.fit(Z_train, Y_train) 
 
 
     # extract the basis vectors
@@ -67,7 +67,7 @@ def cca(model,
 
     print('transforming data.')
     # transform the data
-    train_x, train_y = model_.transform(Z_train.T, Y_train)
+    train_x, train_y = model_.transform(Z_train, Y_train)
 
     print('Collecting matrices.')
     # test loop to convert all data to features
@@ -86,14 +86,14 @@ def cca(model,
         Z_test[i*batch_size:(i+1)*batch_size] = z.reshape(batch_size, output_dim)
         Y_test[i*batch_size:(i+1)*batch_size, :] = y.reshape(batch_size, 5)
     print('fitting CCA')
-    model_ = CCA(n_components=2)
-    model_.fit(Z_train.T, Y_train) 
+    model_ = CCA(n_components=5)
+    model_.fit(Z_train, Y_train) 
 
     test_vector_x, test_vector_y = model_.x_loadings_, model_.y_loadings_
 
     # transform the data
     print('transforming data.')
-    test_x, test_y = model_.transform(Z_test.T, Y_test)
+    test_x, test_y = model_.transform(Z_test, Y_test)
 
     # save the data
     np.save(os.path.join(save_path, 'train_x.npy'), train_x)
