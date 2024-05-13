@@ -67,7 +67,7 @@ def cca(model,
 
     print('transforming data.')
     # transform the data
-    train_x, train_y = model_.transform(Z_train, Y_train)
+    train_x, train_y = model_.transform(Z_train.T, Y_train)
 
     print('Collecting matrices.')
     # test loop to convert all data to features
@@ -93,7 +93,7 @@ def cca(model,
 
     # transform the data
     print('transforming data.')
-    test_x, test_y = model_.transform(Z_test, Y_test)
+    test_x, test_y = model_.transform(Z_test.T, Y_test)
 
     # save the data
     np.save(os.path.join(save_path, 'train_x.npy'), train_x)
