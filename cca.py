@@ -26,7 +26,7 @@ def cca(model,
     print('Running CCA.')
 
     # get output dimension and batch size
-    output_dim = model.module.output_dim
+    output_dim = model.output_dim
     batch_size = train_loader.batch_size
     train_batches, test_batches = len(train_loader), len(test_loader)
 
