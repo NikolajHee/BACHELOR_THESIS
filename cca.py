@@ -127,7 +127,7 @@ if __name__ == '__main__':
 
     model = TS2VEC(12, 32, 320, 0.5, DEVICE)
 
-    path = '/Users/nikolajhertz/Desktop/GIT/BACHELOR_THESIS/BACHELOR_THESIS/results/PTB_XL/(12_05_2024)_(23_52_29)/model.pt'
+    path = 'results/PTB_XL/(12_05_2024)_(23_52_29)/model.pt'
 
     model.model.load_state_dict(torch.load(path, map_location=torch.device('cpu')))
 
