@@ -59,7 +59,7 @@ def cca(model,
     print('fitting CCA')
     model_ = CCA(n_components=2)
 
-    model_.fit(Z_train, Y_train) 
+    model_.fit(Z_train.T, Y_train) 
 
 
     # extract the basis vectors
@@ -87,7 +87,7 @@ def cca(model,
         Y_test[i*batch_size:(i+1)*batch_size, :] = y.reshape(batch_size, 5)
     print('fitting CCA')
     model_ = CCA(n_components=2)
-    model_.fit(Z_train, Y_train) 
+    model_.fit(Z_train.T, Y_train) 
 
     test_vector_x, test_vector_y = model_.x_loadings_, model_.y_loadings_
 
