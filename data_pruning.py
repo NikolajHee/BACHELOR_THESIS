@@ -216,33 +216,25 @@ class Pruning:
         
         unlearn_accuracy = None
 
-        X_test, Y_test = self.collect_matrix(test_dataset)
-
-        N_test, _ = Y_test.shape
-
-        test_predictions = np.zeros((len(self.classifiers), N_test))
-
+        test_predictions = np.zeros((len(self.classifiers), len(test_dataset)))
+        
         if self.data.unlearned_points is not None:
-            X_unlearn, Y_unlearn = self.collect_matrix(self.data.unlearned_points)
-            N_unlearn, _ = Y_unlearn.shape
-            unlearn_predictions = np.zeros((len(self.classifiers), N_unlearn))
+            unlearn_predictions = np.zeros((len(self.classifiers), len(self.data.unlearned_points)))
 
 
         i = 0
         for model, classifier in zip(self.models, self.classifiers):
             Z_train, Y_train = self.collect_matrix2(model, self.data.shards[i])
-
-            #Z_train = self.encode(model, X_train) #TODO : maybe move into TS2Vec
+            Z_test, Y_test = self.collect_matrix2(model, test_dataset)
 
             classifier.fit(Z_train, Y_train.squeeze())
 
 
-            Z_test = self.encode(model, X_test)
-
             test_predictions[i, :] = classifier.predict(Z_test)
 
+            
             if self.data.unlearned_points is not None:
-                Z_unlearn = self.encode(model, X_unlearn)
+                Z_unlearn, Y_unlearn = self.collect_matrix2(model, self.data.unlearned_points)
 
                 unlearn_predictions[i, :] = classifier.predict(Z_unlearn)
 
@@ -291,6 +283,7 @@ class Pruning:
             Z[i] = self.encode(model, X[None,:,:])
 
         return Z, y
+    
 
 
     def train_temp(self,
