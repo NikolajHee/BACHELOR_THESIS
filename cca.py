@@ -38,7 +38,7 @@ def cca(model,
 
     # train loop to convert all data to features
     for i, (X, y) in enumerate(train_loader):
-        z = model(X.to(device).float()) # output: N x T x Dr
+        z = model.model(X.to(device).float()) # output: N x T x Dr
         
         
         z = z.transpose(1,2) # N x Dr x T
