@@ -35,10 +35,10 @@ def main():
     #   (n_instances, n_variables, n_timepoints)
 
 
-    X_train = D_train[0].transpose(0,2,1)
+    X_train = D_train[0].permute(0,2,1)
     Y_train = D_train[1]
 
-    X_test = D_test[0].transpose(0,2,1)
+    X_test = D_test[0].permute(0,2,1)
     Y_test = D_test[1]
 
     trf.fit(X_train)
