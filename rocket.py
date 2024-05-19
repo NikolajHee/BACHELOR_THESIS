@@ -6,7 +6,7 @@ import wandb
 
 
 path_to_data = '/Users/nikolajhertz/Desktop/GIT/BACHELOR_THESIS/code/data/PTB_XL'
-
+path_to_data = None
 
 def main():
     wandb.init(project="BACHELOR_THESIS",
