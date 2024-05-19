@@ -45,6 +45,7 @@ parser.add_argument('--model_path', default=None, nargs='+')
 
 # variables that can be sweeped
 parser.add_argument('-c', '--classifier', default=None, choices=['logistic', 'svc', 'knn'], nargs='+')
+parser.add_argument('-optim', '--optimizer', default='adamw', choices=['adamw', 'adam'], dest='optim_name', nargs='+')
 parser.add_argument('-hd', '--hidden_dim', default=64, type=int, nargs='+')
 parser.add_argument('-od', '--output_dim', default=320, type=int, nargs='+')
 parser.add_argument('-bs', '--batch_size', default=8, type=int, nargs='+')
@@ -144,7 +145,6 @@ def main(sweep=True):
     #     from manual_features import model
     #     return
 
-
     # create train/test-split
     from utils import train_test_dataset
     train_dataset, test_dataset = train_test_dataset(dataset=dataset,
@@ -163,6 +163,13 @@ def main(sweep=True):
                        output_dim=arguments['output_dim'],
                        p=arguments['p'],
                        device=DEVICE)
+        
+        if arguments['optim_name'] == 'adamw':
+            optimizer = torch.optim.AdamW(model.parameters(), lr=arguments['learning_rate'], weight_decay=0.01)
+        elif arguments['optim_name'] == 'adam':
+            optimizer = torch.optim.Adam(model.parameters(), lr=arguments['learning_rate'], weight_decay=0.01)
+        else:
+            raise ValueError(f'{arguments['optim_name']} not valid optimizer.')
 
         # start time object
         time_object.start('Model Training')
@@ -170,9 +177,9 @@ def main(sweep=True):
         # train the framework
         model.train(train_dataset=train_dataset,
                     test_dataset=test_dataset,
+                    optimizer=optimizer,
                     n_epochs=arguments['n_epochs'],
                     batch_size=arguments['batch_size'],
-                    learning_rate=arguments['learning_rate'],
                     grad_clip=arguments['grad_clip'],
                     alpha=arguments['alpha'],
                     wandb=wandb,

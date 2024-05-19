@@ -279,9 +279,9 @@ class TS2VEC(nn.Module):
     def train(self,
               train_dataset,
               test_dataset,
+              optimizer,
               n_epochs:int, 
               batch_size:int,
-              learning_rate:float,
               grad_clip,
               alpha:float,
               wandb,
@@ -294,7 +294,7 @@ class TS2VEC(nn.Module):
         best_train_error = np.inf
 
         # same optimizer as ts2vec; experiment with other choices
-        optimizer = torch.optim.AdamW(self.model.parameters(), lr=learning_rate, weight_decay=0.01)
+        # optimizer = torch.optim.AdamW(self.model.parameters(), lr=learning_rate, weight_decay=0.01)
         
         
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
@@ -379,7 +379,7 @@ class TS2VEC(nn.Module):
             print('-'*20)
             
             # ensure model test-mode
-            self.model.module.test, self.encoder.test = False, False
+            self.model.module.test, self.encoder.test = True, True
 
 
             # TODO: Fix below
