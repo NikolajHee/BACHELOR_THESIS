@@ -25,11 +25,11 @@ def main():
                                                     seed=0,
                                                     return_stand=False)
 
-    D_train = train_dataset[:] #data[train_dataset.indices]
-    D_test = test_dataset[:] #data[test_dataset.indices]
+    D_train = train_dataset #data[train_dataset.indices]
+    D_test = test_dataset #data[test_dataset.indices]
 
 
-
+    print(D_train)
 
     # the input should be in the format of:
     #   (n_instances, n_variables, n_timepoints)
