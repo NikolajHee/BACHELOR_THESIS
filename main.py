@@ -169,7 +169,7 @@ def main(sweep=True):
         elif arguments['optim_name'] == 'adam':
             optimizer = torch.optim.Adam(model.parameters(), lr=arguments['learning_rate'], weight_decay=0.01)
         else:
-            raise ValueError(f'{arguments['optim_name']} not valid optimizer.')
+            raise ValueError(f"{arguments['optim_name']} not valid optimizer.")
 
         # start time object
         time_object.start('Model Training')
