@@ -20,11 +20,14 @@ def main():
     from utils import train_test_dataset
     train_dataset, test_dataset = train_test_dataset(dataset=data,
                                                     test_proportion=0.3,
+                                                    train_size=4000,
+                                                    test_size=1000,
                                                     seed=0,
                                                     return_stand=False)
 
     D_train = train_dataset[:] #data[train_dataset.indices]
     D_test = test_dataset[:] #data[test_dataset.indices]
+
 
 
 
