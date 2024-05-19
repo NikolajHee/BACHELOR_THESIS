@@ -13,7 +13,7 @@ def main():
                 name='ROCKET')
     config = wandb.config
 
-    trf = Rocket(num_kernels=config.num_kernels, n_jobs=-1, random_state=1) 
+    trf = Rocket(num_kernels=config.num_kernels, n_jobs=1, random_state=1) 
 
     data = PTB_XL(path_to_data)
 
