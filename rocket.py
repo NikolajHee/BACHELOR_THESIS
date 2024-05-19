@@ -64,7 +64,7 @@ sweep_configuration = {
     "method": "grid",
     "metric": {"name": "test_accuracy", "goal": "maximize"},
     "parameters": {
-        'num_kernels' : {"values": [8, 16, 32, 64, 128, 256, 512, 1024]},
+        'num_kernels' : {"values": [2, 4, 6, 8, 10, 12, 14, 16, 32, 40, 44, 48, 50, 56, 64, 128, 256, 512, 1024]},
     },
 }
 
