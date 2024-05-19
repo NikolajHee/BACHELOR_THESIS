@@ -20,7 +20,7 @@ def main():
     from utils import train_test_dataset
     train_dataset, test_dataset = train_test_dataset(dataset=data,
                                                     test_proportion=0.3,
-                                                    train_size=10000,
+                                                    train_size=8000,
                                                     test_size=2000,
                                                     seed=0,
                                                     return_stand=False)
