@@ -134,15 +134,26 @@ class TimeTaking:
     def __init__(self, save_path, verbose=False):
         self.start_time = {}
         self.end_time = {}
+        self.pause_time = {}
         self.save_path = save_path
         self.verbose = verbose
+        self._pause = False
 
     
     def start(self, name):
-        if self.verbose: print(f"Starting {name}.")
-        self.start_time[name] = time.time()
+        if name not in self.pause_time.keys():
+            if self.verbose: print(f"Starting {name}.")
+            self.start_time[name] = time.time()
+        else:
+            self.start_time[name] += time.time() - self.pause_time.pop(name)
+
+
+    def pause(self, name):
+        self.pause_time[name] = time.time()
 
     def end(self, name):
+        if name in self.pause_time.keys():
+            self.start_time[name] += time.time() - self.pause_time.pop(name)
         if self.verbose: print(f"Ending {name}.")
         self.end_time[name] = time.time()
 

@@ -171,8 +171,6 @@ def main(sweep=True):
         else:
             raise ValueError(f"{arguments['optim_name']} not valid optimizer.")
 
-        # start time object
-        time_object.start('Model Training')
 
         # train the framework
         model.train(train_dataset=train_dataset,
@@ -186,33 +184,36 @@ def main(sweep=True):
                     train_path=save_path,
                     t_sne=arguments['t_sne'],
                     classifier=arguments['classifier'],
+                    time_object=time_object,
                     )
 
         # end time object
         time_object.end('Model Training')
+
         time_object.save()
+        time_object.pass_to_wandb(wandb)
 
-        if args.cda:
-            from dataset import PTB_XL
-            dataset = PTB_XL(multi_label=True)
+        # if args.cda:
+        #     from dataset import PTB_XL
+        #     dataset = PTB_XL(multi_label=True)
 
-            train_dataset, test_dataset = train_test_dataset(dataset=dataset,
-                                                     test_proportion=0.3,
-                                                     train_size=arguments['N_train'],
-                                                     test_size=arguments['N_test'],
-                                                     return_stand=arguments['normalize'])
+        #     train_dataset, test_dataset = train_test_dataset(dataset=dataset,
+        #                                              test_proportion=0.3,
+        #                                              train_size=arguments['N_train'],
+        #                                              test_size=arguments['N_test'],
+        #                                              return_stand=arguments['normalize'])
 
-            from torch.utils.data import DataLoader
+        #     from torch.utils.data import DataLoader
 
-            train_dataloader = DataLoader(train_dataset, batch_size=arguments['batch_size'], shuffle=True, drop_last=True)
-            test_dataloader = DataLoader(test_dataset, batch_size=arguments['batch_size'], shuffle=True, drop_last=True)
+        #     train_dataloader = DataLoader(train_dataset, batch_size=arguments['batch_size'], shuffle=True, drop_last=True)
+        #     test_dataloader = DataLoader(test_dataset, batch_size=arguments['batch_size'], shuffle=True, drop_last=True)
 
-            from cda import cca
-            cca(model=model.model,
-                train_loader=train_dataloader,
-                test_loader=test_dataloader,
-                device=DEVICE,
-                save_path=save_path)
+        #     from cda import cca
+        #     cca(model=model.model,
+        #         train_loader=train_dataloader,
+        #         test_loader=test_dataloader,
+        #         device=DEVICE,
+        #         save_path=save_path)
         
     else:
         #* clustering

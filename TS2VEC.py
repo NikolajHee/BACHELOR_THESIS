@@ -287,7 +287,8 @@ class TS2VEC(nn.Module):
               wandb,
               train_path:str,
               t_sne:bool,
-              classifier:str):
+              classifier:str,
+              time_object):
 
 
         # initializing the best seen test error
@@ -324,8 +325,11 @@ class TS2VEC(nn.Module):
                         "classifier/test_accuracy": test_accuracy, 
                         "classifier/baseline": baseline})
 
+
+
         # main training loop
         for epoch in range(n_epochs):
+            time_object.start('Model Training')
             # new shuffle for each epoch
             train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
 
@@ -386,6 +390,8 @@ class TS2VEC(nn.Module):
             # log the loss in WandB
             if wandb:
                 wandb.log({"tsloss/hierarchical_contrastive_loss": np.mean(train_loss_list)})
+
+            time_object.pause('Model Training')
 
             # test the representations by classifying the labels
             if classifier and ((epoch%10==0) or (epoch == n_epochs-1)):
