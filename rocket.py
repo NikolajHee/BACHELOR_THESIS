@@ -22,7 +22,7 @@ def main():
                                                     test_proportion=0.3,
                                                     train_size=8000,
                                                     test_size=2000,
-                                                    seed=0,
+                                                    seed=config.seed,
                                                     return_stand=False)
 
     D_train = train_dataset[:] #data[train_dataset.indices]
@@ -64,7 +64,8 @@ sweep_configuration = {
     "method": "grid",
     "metric": {"name": "test_accuracy", "goal": "maximize"},
     "parameters": {
-        'num_kernels' : {"values": [2, 4, 6, 8, 10, 12, 14, 16, 32, 40, 44, 48, 50, 56, 64, 128, 256, 512, 1024]},
+        'num_kernels' : {"values": [2, 4, 6, 8, 10, 12, 14, 16, 32, 44, 48, 56, 64, 128, 256, 512, 1024]},
+        'seed' : {"values": [0,1,2,3,4,5,6,7,8,9,10]}
     },
 }
 
