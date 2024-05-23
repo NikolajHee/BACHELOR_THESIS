@@ -1,6 +1,7 @@
 """
 utils.py
-- This script contains utility functions that are used in the different scripts in the BACHELOR_THESIS folder.
+- This script contains utility functions that are used in 
+  the different scripts in the BACHELOR_THESIS folder.
 """
 
 
@@ -139,14 +140,12 @@ class TimeTaking:
         self.verbose = verbose
         self._pause = False
 
-    
     def start(self, name):
         if name not in self.pause_time.keys():
             if self.verbose: print(f"Starting {name}.")
             self.start_time[name] = time.time()
         else:
             self.start_time[name] += time.time() - self.pause_time.pop(name)
-
 
     def pause(self, name):
         self.pause_time[name] = time.time()
@@ -167,15 +166,13 @@ class TimeTaking:
         if key not in self.pause_time.keys():
             save = {key: time.time() - self.start_time[key]}
         else:
-            save = {key: self.pause[key] - self.start_time[key]}
+            save = {key: self.pause_time[key] - self.start_time[key]}
         wandb.log(save)
 
     def pass_to_wandb(self, wandb):
         for (key, value) in self.start_time.items():
             wandb.log({key: self.end_time[key] - self.start_time[key]})
             
-
-
 def remove_list(args):
     """
     DEPRICATED FUNCTION.
@@ -188,7 +185,6 @@ def remove_list(args):
         else:
             args[i] = j
     #return save
-            
 
 class random_cropping:
     """
