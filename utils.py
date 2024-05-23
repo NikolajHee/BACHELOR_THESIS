@@ -167,7 +167,7 @@ class TimeTaking:
         if key not in self.pause_time.keys():
             save = {key: time.time() - self.start_time[key]}
         else:
-            save = {key: self.pause[name] - self.start_time[key]}
+            save = {key: self.pause[key] - self.start_time[key]}
         wandb.log(save)
 
     def pass_to_wandb(self, wandb):
