@@ -393,7 +393,7 @@ class TS2VEC(nn.Module):
 
             time_object.pause('Model Training')
 
-            time_object.pass_to_wandb()
+            time_object.pass_to_wandb(wandb)
 
             # test the representations by classifying the labels
             if classifier and ((epoch%10==0) or (epoch == n_epochs-1)):
