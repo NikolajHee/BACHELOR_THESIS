@@ -163,6 +163,13 @@ class TimeTaking:
                 f.write(f"{key} : {self.start_time[key]} - {self.end_time[key]} = {self.end_time[key] - self.start_time[key]}s")
                 f.write("\n")
     
+    def log_wandb(self, wandb, key):
+        if key not in self.pause_time.keys():
+            save = {key: time.time() - self.start_time[key]}
+        else:
+            save = {key: self.pause[name] - self.start_time[key]}
+        wandb.log(save)
+
     def pass_to_wandb(self, wandb):
         for (key, value) in self.start_time.items():
             wandb.log({key: self.end_time[key] - self.start_time[key]})
