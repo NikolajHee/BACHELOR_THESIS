@@ -13,10 +13,9 @@ import torch
 import pickle
 import numpy as np
 import pandas as pd
-from torch.utils.data import Dataset, DataLoader
-from sklearn.preprocessing import LabelEncoder
-
 from aeon.datasets import load_classification
+from sklearn.preprocessing import LabelEncoder
+from torch.utils.data import Dataset, DataLoader
 
 
 class PTB_XL(Dataset):
@@ -148,6 +147,19 @@ class PTB_XL(Dataset):
 
 
 
+class PTB_XL_v2(PTB_XL):
+    def __init__(self, data_path=None, sampling_rate=100, multi_label=False):
+        super().__init__(data_path=data_path,
+                         sampling_rate=sampling_rate,
+                         multi_label=multi_label)
+
+
+    def __getitem__(self, idx):
+        return super().__getitem__(idx) + (idx, )
+    
+    def test(self):
+        return super()
+
 
 class AEON_DATA(Dataset):
     """
@@ -176,16 +188,29 @@ class AEON_DATA(Dataset):
 
     def __getitem__(self, idx):
         return self.normalize(self.X[idx].T), self.y[idx]
+
+class AEON_DATA_v2(AEON_DATA):
+    def __init__(self, name):
+        super().__init__(name)
     
+    def __getitem__(self, idx):
+        return super().__getitem__(idx) + (idx, )
+    
+    def test(self, idx):
+        return super().__getitem__(idx)
+
 
 if __name__ == '__main__':        
-    data = PTB_XL('/Users/nikolajhertz/Desktop/GIT/BACHELOR_THESIS/BACHELOR_THESIS/PTB_XL', multi_label=True)
+    data = PTB_XL_v2('/Users/nikolajhertz/Desktop/GIT/BACHELOR_THESIS/BACHELOR_THESIS/PTB_XL', multi_label=True)
 
     #print(data[0:10])
 
-    loader = DataLoader(data, batch_size=32, shuffle=True)
+    loader = DataLoader(data, batch_size=32, shuffle=False)
 
-    print('test')
+    
+
+    for (train, test, index) in loader:
+        print('test')
 
     print(next(iter(loader)))
 

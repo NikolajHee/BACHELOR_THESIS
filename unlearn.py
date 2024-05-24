@@ -1,4 +1,9 @@
 
+
+
+# python unlearn.py -sp 10 -a --seed 0 -hd 32 -od 64 -ne 5 --N_train 200 --N_test 100
+
+
 # import libraries
 import os
 import argparse
@@ -26,6 +31,7 @@ unlearn = parser.add_mutually_exclusive_group()
 unlearn.add_argument('-dp', '--data_pruning', action='store_const', dest='strategy', const='data_pruning')
 unlearn.add_argument('-a', '--amnesiac_unlearning', action='store_const', dest='strategy', const='amnesiac_unlearning')
 
+parser.add_argument('-sp', '--sensitive_points', type=int)
 
 # data pruning specific
 parser.add_argument('--N_shards', type=int)
@@ -79,16 +85,6 @@ if args.seed:
     from utils import random_seed
     random_seed(args.seed)
 
-from dataset import PTB_XL
-dataset = PTB_XL()
-
-from utils import train_test_dataset
-train_dataset, test_dataset = train_test_dataset(dataset=dataset,
-                                                    test_proportion=0.3,
-                                                    train_size=args.N_train,
-                                                    test_size=args.N_test,
-                                                    return_stand=args.normalize)
-    
 
 
 results_path = 'results'
@@ -97,10 +93,79 @@ final_path = 'unlearn'
 
 save_path = os.path.join(results_path, args.dataset, final_path)
 
+if args.strategy == 'amnesiac_unlearning':
+
+    #print(f"1.7MB per model. Therefore for {args.n_epochs*args.senstive_points} models, it needs {args.N_shards*args.N_slices*1.6628:.2f} MB")
+
+    print(f"Upper-bound on space: {(args.sensitive_points * args.n_epochs[0])}MB")
+
+    if os.path.isdir(save_path):
+        import glob
+        items = glob.glob(save_path + '/*.pkl')
+        for item in items:
+            os.remove(item)
+
+    os.makedirs(save_path, exist_ok=True)
+
+    if args.dataset == 'PTB_XL':
+        from dataset import PTB_XL_v2
+        dataset = PTB_XL_v2('PTB_XL')
+    else:
+        from dataset import AEON_DATA_v2
+        # UCR and UEA datasets
+        dataset = AEON_DATA_v2(arguments['dataset'])
+
+
+
+    from utils import train_test_dataset
+    train_dataset, test_dataset = train_test_dataset(dataset=dataset,
+                                                    test_proportion=0.3,
+                                                    train_size=args.N_train,
+                                                    test_size=args.N_test,
+                                                    seed=args.seed,
+                                                    return_stand=args.normalize)
+    from amnesiac import AmnesiacTraining
+    model = AmnesiacTraining(input_dim=args.input_dim,
+                             hidden_dim=args.hidden_dim,
+                             output_dim=args.output_dim,
+                             p=args.p,
+                             device=DEVICE,
+                             sensitive_points=train_dataset.indices[0:args.sensitive_points])
+    
+    model.train(train_dataset=train_dataset,
+                test_dataset=test_dataset,
+                n_epochs=args.n_epochs[0],
+                batch_size=args.batch_size,
+                learning_rate=args.learning_rate,
+                grad_clip=args.grad_clip,
+                alpha=args.alpha,
+                wandb=wandb,
+                train_path=save_path,
+                t_sne=False,
+                classifier=args.classifier)
+    
+
+    model.unlearn()
+
+
 
 if args.strategy == 'data_pruning':
-    
-    from data_pruning import Pruning
+    if args.dataset == 'PTB_XL':
+        from dataset import PTB_XL
+        dataset = PTB_XL('PTB_XL')
+    else:
+        from dataset import AEON_DATA
+        # UCR and UEA datasets
+        dataset = AEON_DATA(arguments['dataset'])
+
+
+    from utils import train_test_dataset
+    train_dataset, test_dataset = train_test_dataset(dataset=dataset,
+                                                    test_proportion=0.3,
+                                                    train_size=args.N_train,
+                                                    test_size=args.N_test,
+                                                    seed=args.seed,
+                                                    return_stand=args.normalize)         
 
 
     print(f"1.7MB per model. Therefore for {args.N_shards*args.N_slices} models, it needs {args.N_shards*args.N_slices*1.6628:.2f} MB")
@@ -111,6 +176,8 @@ if args.strategy == 'data_pruning':
     
 
     save_path = folder_structure(save_path=save_path, N_shards=args.N_shards, N_slices=args.N_slices)
+    
+    from data_pruning import Pruning
 
     data_pruning = Pruning(dataset=train_dataset, 
                      N_shards=args.N_shards, 
@@ -132,6 +199,7 @@ if args.strategy == 'data_pruning':
                              wandb=wandb, 
                              save_path=save_path, 
                              time_taking=time,
+                             classify=True,
                              test_dataset=test_dataset)
     
     print('-'*20)
@@ -140,7 +208,7 @@ if args.strategy == 'data_pruning':
 
     print(f'Accuracy: {acc}')
 
-    data_pruning.unlearn(indices=train_dataset.indices[0:3],
+    data_pruning.unlearn(indices=train_dataset.indices[0:args.sensitive_points],
                          n_epochs=args.n_epochs,
                          batch_size=args.batch_size,
                          learning_rate=args.learning_rate,
@@ -149,8 +217,7 @@ if args.strategy == 'data_pruning':
                          wandb=wandb,
                          save_path=save_path,
                          time_taking=time,
-                         test_dataset=test_dataset
-                )
+                         test_dataset=test_dataset)
 
 
 
