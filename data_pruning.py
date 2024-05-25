@@ -389,7 +389,7 @@ class Pruning:
 
             time_taking.pause('Overall Training')
 
-            time_save = time_taking.output_dict(wandb, 'Overall Training')
+            time_save = time_taking.output_dict('Overall Training')
 
             save.update(time_save)
 
@@ -400,6 +400,7 @@ class Pruning:
 
             save.update({'training_accuracy': training_accuracy, 'test_accuracy': test_accuracy[j]})
 
+            print(f"temp results: {save}")
             wandb.log(save)
             
         time_taking.end('Overall Training')
