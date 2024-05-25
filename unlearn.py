@@ -109,7 +109,7 @@ if args.strategy == 'amnesiac_unlearning':
 
     if args.dataset == 'PTB_XL':
         from dataset import PTB_XL_v2
-        dataset = PTB_XL_v2('PTB_XL')
+        dataset = PTB_XL_v2()
     else:
         from dataset import AEON_DATA_v2
         # UCR and UEA datasets
@@ -145,14 +145,14 @@ if args.strategy == 'amnesiac_unlearning':
                 classifier=args.classifier)
     
 
-    model.unlearn()
+    model.unlearn(save_path)
 
 
 
 if args.strategy == 'data_pruning':
     if args.dataset == 'PTB_XL':
         from dataset import PTB_XL
-        dataset = PTB_XL('PTB_XL')
+        dataset = PTB_XL()
     else:
         from dataset import AEON_DATA
         # UCR and UEA datasets
