@@ -40,7 +40,7 @@ parser.add_argument('--N_slices', type=int)
 
 
 parser.add_argument('--dataset', default='PTB_XL') 
-parser.add_argument('-id', '--input_dim', default=12, type=int)
+#parser.add_argument('-id', '--input_dim', default=12, type=int)
 parser.add_argument('-v', '--verbose', action='store_true')
 parser.add_argument('-n', '--normalize', action='store_true')
 parser.add_argument('--seed', default=None, type=int)
@@ -119,14 +119,14 @@ if args.strategy == 'amnesiac_unlearning':
 
 
     from utils import train_test_dataset
-    train_dataset, test_dataset = train_test_dataset(dataset=dataset,
-                                                    test_proportion=0.3,
-                                                    train_size=args.N_train,
-                                                    test_size=args.N_test,
-                                                    seed=args.seed,
-                                                    return_stand=args.normalize)
+    train_dataset, test_dataset, D = train_test_dataset(dataset=dataset,
+                                                        test_proportion=0.3,
+                                                        train_size=args.N_train,
+                                                        test_size=args.N_test,
+                                                        seed=args.seed,
+                                                        return_stand=args.normalize)
     from amnesiac import AmnesiacTraining
-    model = AmnesiacTraining(input_dim=args.input_dim,
+    model = AmnesiacTraining(input_dim=D,
                              hidden_dim=args.hidden_dim,
                              output_dim=args.output_dim,
                              p=args.p,
@@ -161,12 +161,12 @@ if args.strategy == 'data_pruning':
 
 
     from utils import train_test_dataset
-    train_dataset, test_dataset = train_test_dataset(dataset=dataset,
-                                                    test_proportion=0.3,
-                                                    train_size=args.N_train,
-                                                    test_size=args.N_test,
-                                                    seed=args.seed,
-                                                    return_stand=args.normalize)         
+    train_dataset, test_dataset, D = train_test_dataset(dataset=dataset,
+                                                        test_proportion=0.3,
+                                                        train_size=args.N_train,
+                                                        test_size=args.N_test,
+                                                        seed=args.seed,
+                                                        return_stand=args.normalize)         
 
 
     print(f"1.7MB per model. Therefore for {args.N_shards*args.N_slices} models, it needs {args.N_shards*args.N_slices*1.6628:.2f} MB")
@@ -197,7 +197,7 @@ if args.strategy == 'data_pruning':
     data_pruning = Pruning(dataset=train_dataset, 
                      N_shards=args.N_shards, 
                      N_slices=args.N_slices, 
-                     input_dim=args.input_dim, 
+                     input_dim=D, 
                      hidden_dim=args.hidden_dim, 
                      output_dim=args.output_dim, 
                      p=args.p, 
@@ -214,7 +214,6 @@ if args.strategy == 'data_pruning':
                              wandb=wandb, 
                              save_path=save_path, 
                              time_taking=time,
-                             classify=True,
                              test_dataset=test_dataset)
     
     print('-'*20)
