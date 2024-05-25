@@ -24,9 +24,9 @@ class Slice(Subset):
     def __init__(self, dataset, indices):
         super().__init__(dataset, indices)
 
-        if type(dataset.dataset) is PTB_XL:
+        if (type(dataset.dataset) is PTB_XL) or (type(dataset.dataset) is AEON_DATA):
             self.data_indices = dataset.indices[indices]
-        elif type(dataset.dataset.dataset) is PTB_XL:
+        elif (type(dataset.dataset.dataset) is PTB_XL) or ((type(dataset.dataset.dataset) is AEON_DATA)):
             self.data_indices = dataset.dataset.indices[dataset.indices[indices]]
         
 
@@ -103,6 +103,7 @@ class ShardsAndSlices:
         return shard_index, slice_index
     
     def remove_points(self, x, indices):
+        print('removing')
         def get_mask(indices, remove_indices):
             temp = indices
             mask = np.zeros_like(temp)
@@ -112,6 +113,7 @@ class ShardsAndSlices:
             return ~mask.astype(bool)
         
         for shard_index, slice_index in enumerate(x):
+            print(f"removing {shard_index} {slice_index}")
             if len(slice_index) > 0:
                 for j in np.unique(slice_index):
                     ind_ = self.slices[shard_index][j].data_indices
@@ -121,7 +123,7 @@ class ShardsAndSlices:
                     self.slices[shard_index][j].indices = self.slices[shard_index][j].indices[mask]
         
         # save unlearned points in new dataset
-        if  self.unlearned_points is None:
+        if self.unlearned_points is None:
             unlearned_indices = [np.argmax(i == self.shards[0].dataset.indices) for i in indices]
             self.unlearned_points = Subset(self.shards[0].dataset, unlearned_indices)
             
@@ -214,14 +216,23 @@ class Pruning:
         
         unlearn_accuracy = None
 
-        test_predictions = np.zeros((len(self.classifiers), len(test_dataset)))
+        
+
+        
         
         if self.data.unlearned_points is not None:
             unlearn_predictions = np.zeros((len(self.classifiers), len(self.data.unlearned_points)))
 
 
         i = 0
+        test_predictions = np.zeros((len(self.classifiers), len(test_dataset)))
+        train_predictions = []
+        Y_trains = []
+
         for model, classifier in zip(self.models, self.classifiers):
+            train_prediction = np.zeros((len(self.classifiers), len(self.data.shards[i])))
+            
+
             Z_train, Y_train = self.collect_matrix2(model, self.data.shards[i])
             Z_test, Y_test = self.collect_matrix2(model, test_dataset)
 
@@ -229,6 +240,9 @@ class Pruning:
 
 
             test_predictions[i, :] = classifier.predict(Z_test)
+
+            train_predictions.append(classifier.predict(Z_train))
+            Y_trains.append(Y_train)
 
             
             if self.data.unlearned_points is not None:
@@ -238,19 +252,30 @@ class Pruning:
 
             i+=1
         
-        
-        # majority voting
+
+        # print([i.shape for i in train_predictions])
+        # print([i.shape for i in Y_trains])
+        train_predictions_stack = np.stack([i for i in train_predictions])
+        Y_trains_stack = np.stack([i for i in Y_trains])
+        # print(np.stack([i for i in train_predictions]).shape)
+        # print(np.stack([i for i in Y_trains]).shape)
+        # train majority voting
+        votes = mode(train_predictions_stack, keepdims=False)[0]
+
+        train_accuracy = np.mean(Y_trains_stack.squeeze() == votes.ravel())
+        #train_accuracy = 0
+        # test majority voting
         votes = mode(test_predictions, keepdims=False)[0]
 
-        accuracy = np.mean(Y_test.squeeze() == votes.ravel())
+        test_accuracy = np.mean(Y_test.squeeze() == votes.ravel())
 
-        # majority voting
+        # unlearn majority voting
         if self.data.unlearned_points is not None:
             votes = mode(unlearn_predictions, keepdims=False)[0]
 
             unlearn_accuracy = np.mean(Y_unlearn.squeeze() == votes.ravel())
 
-        return accuracy, unlearn_accuracy
+        return train_accuracy, test_accuracy, unlearn_accuracy
 
 
 
@@ -300,14 +325,16 @@ class Pruning:
             self.models[shard_index] = TS2VEC(**self.model_settings)
 
         for j in range(slice_index, self.data.N_slices):
+            print(j)
+
             self.models[shard_index].temp(dataset=self.data.slices[shard_index][j],
-                            n_epochs=n_epochs[j],
-                            batch_size=batch_size,
-                            learning_rate=learning_rate,
-                            grad_clip=grad_clip,
-                            alpha=alpha,
-                            wandb=wandb,
-                            train_path=None)
+                                          n_epochs=n_epochs[j],
+                                          batch_size=batch_size,
+                                          learning_rate=learning_rate,
+                                          grad_clip=grad_clip,
+                                          alpha=alpha,
+                                          wandb=wandb,
+                                          train_path=None)
                 
 
     def train(self, 
@@ -362,7 +389,7 @@ class Pruning:
                 wandb.log({f'loss_model{i}': np.mean(loss)})
 
             if classify:
-                test_accuracy[j], _ = self.evaluate_classifiers(test_dataset=test_dataset)
+                _, test_accuracy[j], _ = self.evaluate_classifiers(test_dataset=test_dataset)
 
             if wandb is not None: 
                 wandb.log({'test_accuracy': test_accuracy[j]})
@@ -372,8 +399,6 @@ class Pruning:
         time_taking.save()
                 
 
-            
-    
         return test_accuracy
     
 
@@ -411,6 +436,7 @@ class Pruning:
         # train the models that needs to be retrained
         for (shard_index, slice_index) in enumerate(save):
             if len(slice_index) > 0:
+                
                 # train from slice_
                 slice_ = min(slice_index)
 
@@ -420,7 +446,7 @@ class Pruning:
 
                 # if the min-slice is above 1, the path should be given
 
-
+                print(f'Starting train, shard: {shard_index}, slice: {slice_index}.')
                 self.train_temp(shard_index=shard_index,
                                 slice_index=min(slice_index),
                                 n_epochs=n_epochs,
@@ -431,17 +457,18 @@ class Pruning:
                                 wandb=wandb,
                                 path=os.path.join(save_path, f'shard_{shard_index}', f'slice_{slice_-1}', 'model.pt') if slice_>0 else None)
                 
-        test_accuracy, unlearn_accuracy = self.evaluate_classifiers(test_dataset=test_dataset)
+        train_accuracy, test_accuracy, unlearn_accuracy = self.evaluate_classifiers(test_dataset=test_dataset)
 
         print(f"Test accuracy {test_accuracy}. Unlearn accuracy {unlearn_accuracy}.")
 
         if wandb is not None:
-            wandb.log({'unlearn/test_accuracy': test_accuracy, 'unlearn/unlearn_accuracy': unlearn_accuracy})
+            wandb.log({'unlearn/train_accuracy':train_accuracy, 'unlearn/test_accuracy': test_accuracy, 'unlearn/unlearn_accuracy': unlearn_accuracy})
+        
+        return train_accuracy, test_accuracy, unlearn_accuracy
                 
 
 
-
-                     
+           
 
 
         # print("models to be updated:", model_to_update)
@@ -483,6 +510,14 @@ class Pruning:
         unique, counts = np.unique(y, return_counts=True)
 
         return unique[np.argmax(counts)]
+    
+    def load(self, 
+             save_path,
+             device):
+        
+        for i in range(self.data.N_shards):
+            self.models[i].model.load_state_dict(torch.load(os.path.join(save_path, f'shard_{i}/slice_{self.data.N_slices-1}' + '/model.pt'), map_location=device))
+        
 
 
 if __name__ == '__main__':

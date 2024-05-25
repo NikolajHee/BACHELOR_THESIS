@@ -3,6 +3,7 @@
 
 # python unlearn.py -sp 10 -a --seed 0 -hd 32 -od 64 -ne 5 --N_train 200 --N_test 100
 
+from pathlib import Path
 
 # import libraries
 import os
@@ -47,7 +48,7 @@ parser.add_argument('--seed', default=None, type=int)
 
 
 # variables that can be sweeped
-parser.add_argument('-c', '--classifier', default=None, choices=['logistic', 'svc'])
+parser.add_argument('-c', '--classifier', default=None, choices=['logistic', 'svc', 'knn'])
 parser.add_argument('-hd', '--hidden_dim', default=64, type=int)
 parser.add_argument('-od', '--output_dim', default=320, type=int)
 parser.add_argument('-bs', '--batch_size', default=8, type=int)
@@ -65,7 +66,6 @@ args = parser.parse_args()
 arguments = vars(args)
 
 def folder_structure(save_path, N_shards, N_slices):
-    save_path = os.path.join(save_path, 'model_save')
     for i in range(N_shards):
         for j in range(N_slices):
 
@@ -85,18 +85,19 @@ if args.seed:
     from utils import random_seed
     random_seed(args.seed)
 
-
+data_path = os.path.join(Path.cwd(), 'PTB_XL')
 
 results_path = 'results'
-
-final_path = 'unlearn'
+final_path = args.strategy
 
 save_path = os.path.join(results_path, args.dataset, final_path)
+
 
 if args.strategy == 'amnesiac_unlearning':
 
     #print(f"1.7MB per model. Therefore for {args.n_epochs*args.senstive_points} models, it needs {args.N_shards*args.N_slices*1.6628:.2f} MB")
 
+    
     print(f"Upper-bound on space: {(args.sensitive_points * args.n_epochs[0])}MB")
 
     if os.path.isdir(save_path):
@@ -109,7 +110,7 @@ if args.strategy == 'amnesiac_unlearning':
 
     if args.dataset == 'PTB_XL':
         from dataset import PTB_XL_v2
-        dataset = PTB_XL_v2()
+        dataset = PTB_XL_v2(data_path)
     else:
         from dataset import AEON_DATA_v2
         # UCR and UEA datasets
@@ -152,7 +153,7 @@ if args.strategy == 'amnesiac_unlearning':
 if args.strategy == 'data_pruning':
     if args.dataset == 'PTB_XL':
         from dataset import PTB_XL
-        dataset = PTB_XL()
+        dataset = PTB_XL(data_path)
     else:
         from dataset import AEON_DATA
         # UCR and UEA datasets
@@ -174,6 +175,20 @@ if args.strategy == 'data_pruning':
             f"The model will use above 1000MB in space! " \
             f"It will use around {args.N_shards*args.N_slices*1.6628} MB."
     
+
+    # remove old files
+    if os.path.isdir(save_path):
+        import glob
+        items = glob.glob(save_path + '/*')
+        for item in items:
+            if "shard" in item:
+                slices_list = glob.glob(item + '/*')
+                for slice_item in slices_list:
+                    if 'slice' in slice_item:
+                        if os.path.isfile(slice_item + '/model.pt'):
+                            os.remove(slice_item + '/model.pt')
+                    os.rmdir(slice_item)
+                os.rmdir(item)
 
     save_path = folder_structure(save_path=save_path, N_shards=args.N_shards, N_slices=args.N_slices)
     

@@ -187,7 +187,7 @@ class AEON_DATA(Dataset):
         return X
 
     def __getitem__(self, idx):
-        return self.normalize(self.X[idx].T), self.y[idx]
+        return torch.tensor(self.normalize(self.X[idx].T)), torch.tensor(self.y[idx])
 
 class AEON_DATA_v2(AEON_DATA):
     def __init__(self, name):
