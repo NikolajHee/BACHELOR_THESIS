@@ -34,7 +34,7 @@ parser = argparse.ArgumentParser(
                     description='Representation learning and Machine Unlearning',
                     epilog='By Nikolaj Hertz s214644')
 parser.add_argument('--dataset', default='PTB_XL') 
-parser.add_argument('-id', '--input_dim', default=12, type=int)
+#parser.add_argument('-id', '--input_dim', default=12, type=int)
 parser.add_argument('-v', '--verbose', action='store_true')
 parser.add_argument('-n', '--normalize', default='off', choices=['on', 'off'], type=str, nargs='+')
 parser.add_argument('--cda', action='store_true')
@@ -147,18 +147,19 @@ def main(sweep=True):
 
     # create train/test-split
     from utils import train_test_dataset
-    train_dataset, test_dataset = train_test_dataset(dataset=dataset,
-                                                     test_proportion=0.3,
-                                                     train_size=arguments['N_train'],
-                                                     test_size=arguments['N_test'],
-                                                     return_stand=arguments['normalize'] == 'on')
+    train_dataset, test_dataset, D = train_test_dataset(dataset=dataset,
+                                                        test_proportion=0.3,
+                                                        train_size=arguments['N_train'],
+                                                        test_size=arguments['N_test'],
+                                                        return_stand=arguments['normalize'] == 'on',
+                                                        seed=arguments['seed'])
                                                     
     # Either train a model or load existing model
     if not arguments['model_path']:
         from TS2VEC import TS2VEC
 
         # initialize model
-        model = TS2VEC(input_dim=arguments['input_dim'],
+        model = TS2VEC(input_dim=D,
                        hidden_dim=arguments['hidden_dim'],
                        output_dim=arguments['output_dim'],
                        p=arguments['p'],
@@ -220,7 +221,7 @@ def main(sweep=True):
         from TS2VEC import Encoder
 
 
-        encoder = Encoder(input_dim=arguments['input_dim'],
+        encoder = Encoder(input_dim=D,
                                hidden_dim=arguments['hidden_dim'],
                                output_dim=arguments['output_dim'],
                                p=arguments['p']).to(DEVICE)
