@@ -71,6 +71,8 @@ def train_test_dataset(dataset,
     
     # get the shape of the data
     [T, D] = train_dataset[0][0].shape
+
+
     
     # standardize the data
     if return_stand:
@@ -85,7 +87,7 @@ def train_test_dataset(dataset,
         test_dataset.mean = np.mean(X)
         test_dataset.std = np.std(X)
 
-    return train_dataset, test_dataset
+    return train_dataset, test_dataset, D
 
 def baseline(train_dataset, test_dataset):
     """
@@ -161,13 +163,20 @@ class TimeTaking:
             for (key, value) in self.start_time.items():
                 f.write(f"{key} : {self.start_time[key]} - {self.end_time[key]} = {self.end_time[key] - self.start_time[key]}s")
                 f.write("\n")
-    
-    def log_wandb(self, wandb, key):
+
+    def output_dict(self, key):
         if key not in self.pause_time.keys():
             save = {key: time.time() - self.start_time[key]}
         else:
             save = {key: self.pause_time[key] - self.start_time[key]}
+
+        return save
+    
+    def log_wandb(self, wandb, key):
+        save = self.output_dict(key)
         wandb.log(save)
+    
+
 
     def pass_to_wandb(self, wandb):
         for (key, value) in self.start_time.items():
