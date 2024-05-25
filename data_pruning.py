@@ -269,13 +269,15 @@ class Pruning:
 
         test_accuracy = np.mean(Y_test.squeeze() == votes.ravel())
 
+        ind_acc = np.mean(test_predictions == np.repeat(Y_test, 4, axis=1).T, axis=1)
+
         # unlearn majority voting
         if self.data.unlearned_points is not None:
             votes = mode(unlearn_predictions, keepdims=False)[0]
 
             unlearn_accuracy = np.mean(Y_unlearn.squeeze() == votes.ravel())
 
-        return train_accuracy, test_accuracy, unlearn_accuracy
+        return ind_acc, train_accuracy, test_accuracy, unlearn_accuracy
 
 
 
@@ -393,13 +395,15 @@ class Pruning:
 
             save.update(time_save)
 
-            wandb.log(save)
+            #wandb.log(save)
 
 
-            training_accuracy, test_accuracy[j], _ = self.evaluate_classifiers(test_dataset=test_dataset)
+            ind_class, training_accuracy, test_accuracy[j], _ = self.evaluate_classifiers(test_dataset=test_dataset)
 
             save.update({'training_accuracy': training_accuracy, 'test_accuracy': test_accuracy[j]})
 
+            save.update({f"acc_model{i}": ind_class[i] for i in range(len(ind_class))})
+            
             print(f"temp results: {save}")
             wandb.log(save)
             
@@ -569,7 +573,7 @@ if __name__ == '__main__':
     dataset = PTB_XL('/Users/nikolajhertz/Desktop/GIT/BACHELOR_THESIS/BACHELOR_THESIS/PTB_XL')
 
     from utils import train_test_dataset
-    train_dataset, test_dataset = train_test_dataset(dataset=dataset,
+    train_dataset, test_dataset, D = train_test_dataset(dataset=dataset,
                                                      test_proportion=test_proportion,
                                                      train_size=train_size,
                                                      test_size=test_size,
