@@ -346,7 +346,6 @@ class Pruning:
               wandb,
               save_path:str,
               time_taking: TimeTaking,
-              classify:bool,
               test_dataset=None):
         """
         Train the model sequentially.   
@@ -366,10 +365,9 @@ class Pruning:
 
             print(f"Training models for {n_epochs[j]} epochs.")
             
+            losses = []
 
             for i, model in enumerate(self.models):
-
-                time_taking.start(f'{i}.{j}')
 
                 loss = model.temp(dataset=self.data.slices[i][j],
                                 n_epochs=n_epochs[j],
@@ -379,20 +377,30 @@ class Pruning:
                                 alpha=alpha,
                                 wandb=wandb,
                                 train_path=save_path)
-                
-                time_taking.end(f'{i}.{j}')
 
                 
                 torch.save(model.model.state_dict(), 
                            os.path.join(save_path, f'shard_{i}', f'slice_{j}', 'model.pt'))
                 
-                wandb.log({f'loss_model{i}': np.mean(loss)})
+                losses.append(loss)
+                
+            save = {f"loss_model{i}": np.mean(x) for i, x in enumerate(losses)}
 
-            if classify:
-                _, test_accuracy[j], _ = self.evaluate_classifiers(test_dataset=test_dataset)
 
-            if wandb is not None: 
-                wandb.log({'test_accuracy': test_accuracy[j]})
+            time_taking.pause('Overall Training')
+
+            time_save = time_taking.output_dict(wandb, 'Overall Training')
+
+            save.update(time_save)
+
+            wandb.log(save)
+
+
+            training_accuracy, test_accuracy[j], _ = self.evaluate_classifiers(test_dataset=test_dataset)
+
+            save.update({'training_accuracy': training_accuracy, 'test_accuracy': test_accuracy[j]})
+
+            wandb.log(save)
             
         time_taking.end('Overall Training')
 
@@ -557,7 +565,7 @@ if __name__ == '__main__':
     time = TimeTaking(save_path=save_path, verbose=False)
 
     random_seed(1)
-    dataset = PTB_XL('/Users/nikolajhertz/Desktop/GIT/BACHELOR_THESIS/code/data/PTB_XL')
+    dataset = PTB_XL('/Users/nikolajhertz/Desktop/GIT/BACHELOR_THESIS/BACHELOR_THESIS/PTB_XL')
 
     from utils import train_test_dataset
     train_dataset, test_dataset = train_test_dataset(dataset=dataset,
@@ -582,7 +590,6 @@ if __name__ == '__main__':
                     classifier_name='logistic')
 
     
-
     acc = test2.train(n_epochs=epochs, 
                 batch_size=batch_size, 
                 learning_rate=learning_rate, 
