@@ -230,9 +230,6 @@ class Pruning:
         Y_trains = []
 
         for model, classifier in zip(self.models, self.classifiers):
-            train_prediction = np.zeros((len(self.classifiers), len(self.data.shards[i])))
-            
-
             Z_train, Y_train = self.collect_matrix2(model, self.data.shards[i])
             Z_test, Y_test = self.collect_matrix2(model, test_dataset)
 
@@ -269,7 +266,7 @@ class Pruning:
 
         test_accuracy = np.mean(Y_test.squeeze() == votes.ravel())
 
-        ind_acc = np.mean(test_predictions == np.repeat(Y_test, 4, axis=1).T, axis=1)
+        ind_acc = np.mean(test_predictions == np.repeat(Y_test, self.data.N_shards, axis=1).T, axis=1)
 
         # unlearn majority voting
         if self.data.unlearned_points is not None:
