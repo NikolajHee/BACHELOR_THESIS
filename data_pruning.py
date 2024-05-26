@@ -226,8 +226,7 @@ class Pruning:
 
         i = 0
         test_predictions = np.zeros((len(self.classifiers), len(test_dataset)))
-        train_predictions = []
-        Y_trains = []
+        ind_train_accuracy = []
 
         for model, classifier in zip(self.models, self.classifiers):
             Z_train, Y_train = self.collect_matrix2(model, self.data.shards[i])
@@ -238,8 +237,8 @@ class Pruning:
 
             test_predictions[i, :] = classifier.predict(Z_test)
 
-            train_predictions.append(classifier.predict(Z_train))
-            Y_trains.append(Y_train)
+            ind_train_accuracy.append(np.mean(classifier.predict(Z_train) == Y_train.squeeze()))
+  
 
             
             if self.data.unlearned_points is not None:
@@ -250,23 +249,15 @@ class Pruning:
             i+=1
         
 
-        # print([i.shape for i in train_predictions])
-        # print([i.shape for i in Y_trains])
-        train_predictions_stack = np.stack([i for i in train_predictions])
-        Y_trains_stack = np.stack([i for i in Y_trains])
-        # print(np.stack([i for i in train_predictions]).shape)
-        # print(np.stack([i for i in Y_trains]).shape)
-        # train majority voting
-        votes = mode(train_predictions_stack, keepdims=False)[0]
 
-        train_accuracy = np.mean(Y_trains_stack.squeeze() == votes.ravel())
-        #train_accuracy = 0
         # test majority voting
         votes = mode(test_predictions, keepdims=False)[0]
 
         test_accuracy = np.mean(Y_test.squeeze() == votes.ravel())
 
-        ind_acc = np.mean(test_predictions == np.repeat(Y_test, self.data.N_shards, axis=1).T, axis=1)
+
+
+        ind_test_accuracy = np.mean(test_predictions == np.repeat(Y_test, self.data.N_shards, axis=1).T, axis=1)
 
         # unlearn majority voting
         if self.data.unlearned_points is not None:
@@ -274,7 +265,7 @@ class Pruning:
 
             unlearn_accuracy = np.mean(Y_unlearn.squeeze() == votes.ravel())
 
-        return ind_acc, train_accuracy, test_accuracy, unlearn_accuracy
+        return ind_test_accuracy, ind_train_accuracy, test_accuracy, unlearn_accuracy
 
 
 
@@ -394,13 +385,14 @@ class Pruning:
 
             #wandb.log(save)
 
+            ind_train_accuracy, ind_test_accuracy, test_accuracy[j], _ = self.evaluate_classifiers(test_dataset=test_dataset)
 
-            ind_class, training_accuracy, test_accuracy[j], _ = self.evaluate_classifiers(test_dataset=test_dataset)
+            save.update({'test_accuracy': test_accuracy[j]})
 
-            save.update({'training_accuracy': training_accuracy, 'test_accuracy': test_accuracy[j]})
+            save.update({f"train_acc_model{i}": ind_train_accuracy[i] for i in range(len(ind_train_accuracy))})
 
-            save.update({f"acc_model{i}": ind_class[i] for i in range(len(ind_class))})
-            
+            save.update({f"test_acc_model{i}": ind_test_accuracy[i] for i in range(len(ind_test_accuracy))})
+
             print(f"temp results: {save}")
             wandb.log(save)
             
@@ -424,6 +416,8 @@ class Pruning:
                 save_path:str,
                 time_taking: TimeTaking,
                 test_dataset):
+
+        time_taking.start('Overall Unlearning')
 
         save = [[] for _ in range(len(self.models))]
 
@@ -467,15 +461,27 @@ class Pruning:
                                 wandb=wandb,
                                 path=os.path.join(save_path, f'shard_{shard_index}', f'slice_{slice_-1}', 'model.pt') if slice_>0 else None)
                 
-        train_accuracy, test_accuracy, unlearn_accuracy = self.evaluate_classifiers(test_dataset=test_dataset)
 
-        print(f"Test accuracy {test_accuracy}. Unlearn accuracy {unlearn_accuracy}.")
+        time_taking.end('Overall Unlearning')
+        time_ = time_taking.output_dict('Overall Unlearning')
+                
+        ind_train_accuracy, ind_test_accuracy, test_accuracy, unlearn_accuracy = self.evaluate_classifiers(test_dataset=test_dataset)
+
+
+        save = {}
+        
+        save.update({f"unlearning time": {time_}})
+
+        save.update({f"train_acc_model{i}": ind_train_accuracy[i] for i in range(len(ind_train_accuracy))})
+
+        save.update({f"test_acc_model{i}": ind_test_accuracy[i] for i in range(len(ind_test_accuracy))})
+
+        save.update({f"unlearn accuracy": unlearn_accuracy, 'test accuracy': test_accuracy})
+
 
         if wandb is not None:
-            wandb.log({'unlearn/train_accuracy':train_accuracy, 'unlearn/test_accuracy': test_accuracy, 'unlearn/unlearn_accuracy': unlearn_accuracy})
+            wandb.log(save)
         
-        return train_accuracy, test_accuracy, unlearn_accuracy
-                
 
 
            
