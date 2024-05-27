@@ -1,32 +1,36 @@
+"""
+Amnesiac Unlearning
+"""
 
+
+import os
 import torch
-from torch import nn
+import pickle
+import glob
 import warnings
-import numpy as np
-from classifier import classifier_train
-from clustering import tsne
-import torch
 from torch import nn
+from tqdm import tqdm
+import numpy as np
+from classifier2 import classifier_train
+from clustering import tsne
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-import os
-from tqdm import tqdm
-import pickle
-
-
-sensitive_points = []
 
 
 from TS2VEC import TS2VEC, RandomCropping, hierarchical_contrastive_loss
 
 class AmnesiacTraining(TS2VEC):
+    """
+    
+    """
     def __init__(self, 
-                 input_dim,
-                 hidden_dim,
-                 output_dim,
-                 p,
+                 input_dim:int,
+                 hidden_dim:int,
+                 output_dim:int,
+                 p:float,
                  device,
                  sensitive_points):
+        
         super().__init__(input_dim=input_dim,
                          hidden_dim=hidden_dim,
                          output_dim=output_dim,
@@ -36,7 +40,6 @@ class AmnesiacTraining(TS2VEC):
         self.sensitive_points = sensitive_points
 
         self.before, self.after, self.delta = {}, {}, {}
-
 
     def train(self,
               train_dataset,
@@ -51,13 +54,11 @@ class AmnesiacTraining(TS2VEC):
               t_sne:bool,
               classifier:str):
 
-
-
-
-        # same optimizer as ts2vec; experiment with other choices
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=learning_rate, weight_decay=0.01)
         
         
+
+
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
         if t_sne or classifier:
             test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
@@ -96,15 +97,17 @@ class AmnesiacTraining(TS2VEC):
             train_loss_list = []
 
             # evaluating each batch
-            for i, (X, Y) in enumerate(train_dataloader):
+            for i, (X, Y, indices) in enumerate(train_dataloader):
+                # is there any sensitive points in the batch
+                contain = any([i.item() in self.sensitive_points for i in indices])
+
+                if contain: print('detected sensitive')
                 
                 X = X.to(self.device) # N x T x D
                 
                 # random crop two overlapping augments:
                 crop = RandomCropping()
 
-                #print(X.shape)
-                
                 signal_aug_1, signal_aug_2, crop_l, _ = crop(X) # (N x T1 x D) & (N x T2 & D)
                 
                 # reset gradients
@@ -151,7 +154,7 @@ class AmnesiacTraining(TS2VEC):
                         step[key] = after[key] - before[key]
                 
                 
-                    f = open(f"steps/e{epoch}b{i:04}.pkl", "wb")
+                    f = open(os.path.join(train_path, f"e{epoch}b{i:04}.pkl"), "wb")
                     pickle.dump(step, f)
                     f.close()
             
@@ -183,9 +186,6 @@ class AmnesiacTraining(TS2VEC):
                 
 
 
-
-            
-
             # test the representations by clustering (with self-organizing maps)
             if t_sne and ((epoch%10==0) or (epoch == n_epochs-1)):
                 print("Clustering...")
@@ -202,19 +202,54 @@ class AmnesiacTraining(TS2VEC):
             torch.save(self.model.state_dict(), os.path.join(train_path, 'model.pt'))
 
 
-    def unlearn(self,
-                points,):
-        assert all([point in self.sensitive_points for point in points]), \
-                "All points not in sensitive points!"
-        pass
+    def unlearn(self, save_path):
+        """
+        Unlearns all the sensitive points
+        """
 
+        gradients = glob.glob(os.path.join(save_path, '/*.pkl'))
+
+        sorted(gradients)
+
+        for grad in gradients:
+            path = os.path.join(save_path, grad)
+
+            f = open(path, "rb")
+
+            steps = pickle.load(f)
+
+            f.close()
+            
+            const = 1
+            
+            with torch.no_grad():
+                state = self.encoder.state_dict()
+                for param_tensor in state:
+                    if "weight" in param_tensor or "bias" in param_tensor:
+                        state[param_tensor] = state[param_tensor] - const*steps[param_tensor]
+
+
+
+    def fine_tune(self,
+              train_dataset,
+              test_dataset,
+              optimizer,
+              n_epochs:int, 
+              batch_size:int,
+              grad_clip,
+              alpha:float,
+              wandb,
+              train_path:str,
+              t_sne:bool,
+              classifier:str):
+        pass
     
 if __name__ == '__main__':
     DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     model = AmnesiacTraining(12, 32, 320, 0.5, DEVICE, [0])
 
 
-    from dataset import PTB_XL
+    from dataset import PTB_XL_2
     #dataset = PTB_XL('/Users/nikolajhertz/Desktop/GIT/BACHELOR_THESIS/BACHELOR_THESIS/PTB_XL')
 
     from dataset import AEON_DATA
@@ -241,4 +276,6 @@ if __name__ == '__main__':
                 train_path=None,
                 t_sne=False,
                 classifier='logistic',)
-                    
+    
+
+    model.unlearn()
