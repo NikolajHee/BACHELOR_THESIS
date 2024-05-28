@@ -78,7 +78,7 @@ now = datetime.now()
 dt_string = now.strftime("(%d_%m_%Y)_(%H_%M_%S)")
 
 wandb.init(project="BACHELOR_THESIS",
-            name='UNLEARNING',
+            name='UNLEARNING_' + args.strategy,
             config=arguments)
 
 if args.seed:
