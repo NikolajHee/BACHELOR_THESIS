@@ -228,7 +228,8 @@ class AmnesiacTraining(TS2VEC):
                     if "weight" in param_tensor or "bias" in param_tensor:
                         state[param_tensor] = state[param_tensor] - const*steps[param_tensor]
 
-
+    def load(self, path):
+        self.model.load_state_dict(torch.load(path))
 
     def fine_tune(self,
               train_dataset,
