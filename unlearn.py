@@ -1,6 +1,5 @@
 
 
-
 # python unlearn.py -sp 10 -a --seed 0 -hd 32 -od 64 -ne 5 --N_train 200 --N_test 100
 
 from pathlib import Path
@@ -9,6 +8,7 @@ from pathlib import Path
 import os
 import argparse
 import torch
+import pickle
 import wandb
 from datetime import datetime
 
@@ -202,27 +202,41 @@ if args.strategy == 'data_pruning':
                      output_dim=args.output_dim, 
                      p=args.p, 
                      device=DEVICE,
-                     classifier_name=args.classifier)
+                     classifier_name=args.classifier,
+                     seed=args.seed)
     
     time = TimeTaking(save_path=save_path)
     
-    acc = data_pruning.train(n_epochs=args.n_epochs, 
-                             batch_size=args.batch_size, 
-                             learning_rate=args.learning_rate, 
-                             grad_clip=args.grad_clip, 
-                             alpha=args.alpha, 
-                             wandb=wandb, 
-                             save_path=save_path, 
-                             time_taking=time,
-                             test_dataset=test_dataset)
+    data_pruning.train(n_epochs=args.n_epochs, 
+                        batch_size=args.batch_size, 
+                        learning_rate=args.learning_rate, 
+                        grad_clip=args.grad_clip, 
+                        alpha=args.alpha, 
+                        wandb=wandb, 
+                        save_path=save_path, 
+                        time_taking=time,
+                        test_dataset=test_dataset)
     
-    print('-'*20)
-    print("UNLEARNING")
-    print('-'*20)
+    from torch.utils.data import Subset
 
-    print(f'Accuracy: {acc}')
+    ind_train_acc = data_pruning.train_classifiers()
+    unlearn_acc, ind_unlearn_acc = data_pruning.evaluate(Subset(train_dataset.dataset, train_dataset.indices[0:args.sensitive_points]))
+    test_acc, ind_test_acc = data_pruning.evaluate(test_dataset)
 
-    data_pruning.unlearn(indices=train_dataset.indices[0:args.sensitive_points],
+    save = {'ind_train_acc': ind_train_acc,
+            'ind_unlearn_acc': ind_unlearn_acc,
+            'ind_test_acc': ind_test_acc,
+            "unlearn_acc": unlearn_acc,
+            "test_acc": test_acc}
+
+
+
+
+    with open(args.dataset + '_' + args.strategy + '_before_accuracy.pickle', 'wb') as handle:
+        pickle.dump(save, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+    time = data_pruning.unlearn(indices=train_dataset.indices[0:args.sensitive_points],
                          n_epochs=args.n_epochs,
                          batch_size=args.batch_size,
                          learning_rate=args.learning_rate,
@@ -232,6 +246,27 @@ if args.strategy == 'data_pruning':
                          save_path=save_path,
                          time_taking=time,
                          test_dataset=test_dataset)
+
+    print(time)
+
+    wandb.log({'time': time})
+
+    ind_train_acc = data_pruning.train_classifiers()
+    unlearn_acc, ind_unlearn_acc = data_pruning.evaluate(Subset(train_dataset.dataset, train_dataset.indices[0:args.sensitive_points]))
+    test_acc, ind_test_acc = data_pruning.evaluate(test_dataset)
+
+    save = {'ind_train_acc': ind_train_acc,
+            'ind_unlearn_acc': ind_unlearn_acc,
+            'ind_test_acc': ind_test_acc,
+            "unlearn_acc": unlearn_acc,
+            "test_acc": test_acc}
+
+
+
+
+    with open(args.dataset + '_' + args.strategy + '_after_accuracy.pickle', 'wb') as handle:
+        pickle.dump(save, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
 
 
 
