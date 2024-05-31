@@ -202,10 +202,12 @@ class AmnesiacTraining(TS2VEC):
             torch.save(self.model.state_dict(), os.path.join(train_path, 'model.pt'))
 
 
-    def unlearn(self, save_path):
+    def unlearn(self, save_path, time_taking, const = 1):
         """
         Unlearns all the sensitive points
         """
+
+        time_taking.start('Overall training')
 
         gradients = glob.glob(os.path.join(save_path, '/*.pkl'))
 
@@ -220,13 +222,124 @@ class AmnesiacTraining(TS2VEC):
 
             f.close()
             
-            const = 1
-            
             with torch.no_grad():
                 state = self.encoder.state_dict()
                 for param_tensor in state:
                     if "weight" in param_tensor or "bias" in param_tensor:
                         state[param_tensor] = state[param_tensor] - const*steps[param_tensor]
+
+        time_taking.end('Overall training')
+
+        time_taking.save()
+
+    def load(self, path):
+        self.model.load_state_dict(torch.load(path))
+
+    def evaluate(self,
+                 train_dataset,
+                 test_dataset,
+                 unlearn_dataset,
+                 classifier_name,
+                 device):
+
+        # # get baseline accuracy (based on majority class)
+        # baseline_accuracy = baseline(train_dataset=train_dataset, 
+        #                             test_dataset=test_dataset)
+        
+        
+        # choose classifier
+        if classifier_name == 'svc':
+            
+            classifier = svm.SVC(kernel='rbf') 
+
+        elif classifier_name == 'logistic':
+            from sklearn.preprocessing import StandardScaler
+            from sklearn.linear_model import LogisticRegression
+            from sklearn.pipeline import make_pipeline
+            classifier = make_pipeline(StandardScaler(), LogisticRegression(max_iter=1000))
+
+        elif classifier_name == 'knn':
+            from sklearn.neighbors import KNeighborsClassifier
+            classifier = KNeighborsClassifier(n_neighbors=5)
+
+        else:
+            raise ValueError(f'{classifier_name} is not a choice')
+
+
+        # get output dimension and batch size
+        output_dim = self.output_dim
+
+        # initialize
+        Z_train = np.zeros((len(train_dataset), self.output_dim))
+        Y_train = np.zeros((len(train_dataset)))
+        Z_test = np.zeros((len(test_dataset), self.output_dim))
+        Y_test = np.zeros((len(test_dataset)))
+        Z_unlearn = np.zeros((len(unlearn_dataset), self.output_dim))
+        Y_unlearn = np.zeros((len(unlearn_dataset)))
+
+        from tqdm import tqdm
+
+        # train loop to convert all data to features
+        for i, (X, y, _) in tqdm(enumerate(train_dataset)):
+
+            z = self.model(X.to(device).float()[None,:,:]) # output: N x T x Dr
+            
+            z = z.transpose(1,2) # N x Dr x T
+
+            # Maxpooling is inspried by the TS2VEC framework for classification
+            #   maxpooling over time instances!
+            z = F.max_pool1d(z, kernel_size=z.shape[2]) # N x Dr
+
+            z = z.detach().cpu().numpy().reshape(z.shape[0], -1)
+
+            y = y.numpy()
+
+            Z_train[i] = z.reshape(output_dim)
+            Y_train[i] = y
+
+        # fit the classifier to the features (based on the training data)
+        classifier.fit(Z_train, Y_train)
+
+        # calculate the accuracy on the training data
+        train_accuracy = np.mean(classifier.predict(Z_train) == Y_train)
+
+        # test loop to convert all data to features
+        for i, (X, y, _) in enumerate(test_dataset):
+            z = self.model(X.to(device).float()[None,:,:])
+
+            z = z.transpose(1,2) # N x Dr x T
+            # Maxpooling is inspried by the TS2VEC framework for classification
+            #   maxpooling over time instances!
+            z = F.max_pool1d(z, kernel_size=z.shape[2])
+
+            z = z.detach().cpu().numpy().reshape(z.shape[0], -1)
+            y = y.numpy()
+
+            Z_test[i] = z.reshape(1, output_dim)
+            Y_test[i] = y
+
+        # calculate the accuracy on the test data
+        test_accuracy = np.mean(classifier.predict(Z_test) == Y_test)
+
+        # test loop to convert all data to features
+        for i, (X, y, _) in enumerate(unlearn_dataset):
+            z = self.model(X.to(device).float()[None,:,:])
+
+            z = z.transpose(1,2) # N x Dr x T
+            # Maxpooling is inspried by the TS2VEC framework for classification
+            #   maxpooling over time instances!
+            z = F.max_pool1d(z, kernel_size=z.shape[2])
+
+            z = z.detach().cpu().numpy().reshape(z.shape[0], -1)
+            y = y.numpy()
+
+            Z_unlearn[i] = z.reshape(1, output_dim)
+            Y_unlearn[i] = y
+
+        # calculate the accuracy on the test data
+        unlearn_accuracy = np.mean(classifier.predict(Z_unlearn) == Y_unlearn)
+
+        return train_accuracy, test_accuracy, unlearn_accuracy
 
 
 

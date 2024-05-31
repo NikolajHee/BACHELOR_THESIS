@@ -1,5 +1,8 @@
 """
 Data Pruning
+- contains the method for splitting the data into shards and shards into slices,
+whereafter the model described in the thesis is trained on each shard.
+- is run in unlearn.py
 """
 
 # imports
@@ -42,6 +45,7 @@ class ShardsAndSlices:
     def __init__(self, dataset, N_shards:int, N_slices:int, seed = None):
         if seed is not None:
             np.random.seed(seed)
+            random.seed(seed)
         
         self.unlearned_points = None
 
@@ -103,7 +107,6 @@ class ShardsAndSlices:
         return shard_index, slice_index
     
     def remove_points(self, x, indices):
-        print('removing')
         def get_mask(indices, remove_indices):
             temp = indices
             mask = np.zeros_like(temp)
@@ -212,14 +215,53 @@ class Pruning:
 
             return z
 
+
+
+    def evaluate(self, data):
+        i = 0
+        ind_accuracy = []
+
+        predictions = np.zeros((len(self.classifiers), len(data)))
+        for model, classifier in zip(self.models, self.classifiers):
+            Z, Y = self.collect_matrix2(model, data)
+
+            predictions[i, :] = classifier.predict(Z)
+
+            ind_accuracy.append(np.mean(classifier.predict(Z) == Y.squeeze()))
+
+            i+=1
+        
+        # test majority voting
+        votes = mode(predictions, keepdims=False)[0]
+
+        accuracy = np.mean(Y.squeeze() == votes.ravel())
+
+        return accuracy, ind_accuracy
+    
+
+    def train_classifiers(self):
+        ind_train_accuracy = []
+        
+
+        i = 0
+        for model, classifier in zip(self.models, self.classifiers):
+            Z_train, Y_train = self.collect_matrix2(model, self.data.shards[i])
+
+            classifier.fit(Z_train, Y_train.squeeze())
+
+            ind_train_accuracy.append(np.mean(classifier.predict(Z_train) == Y_train.squeeze()))
+
+            i+=1
+
+        
+        return ind_train_accuracy
+
+
     def evaluate_classifiers(self, test_dataset):
         
         unlearn_accuracy = None
 
-        
 
-        
-        
         if self.data.unlearned_points is not None:
             unlearn_predictions = np.zeros((len(self.classifiers), len(self.data.unlearned_points)))
 
@@ -464,45 +506,10 @@ class Pruning:
 
         time_taking.end('Overall Unlearning')
         time_ = time_taking.output_dict('Overall Unlearning')
-                
-        ind_train_accuracy, ind_test_accuracy, test_accuracy, unlearn_accuracy = self.evaluate_classifiers(test_dataset=test_dataset)
-
-
-        save = {}
         
-        save.update({f"unlearning time": {time_}})
-
-        save.update({f"train_acc_model{i}": ind_train_accuracy[i] for i in range(len(ind_train_accuracy))})
-
-        save.update({f"test_acc_model{i}": ind_test_accuracy[i] for i in range(len(ind_test_accuracy))})
-
-        save.update({f"unlearn accuracy": unlearn_accuracy, 'test accuracy': test_accuracy})
-
-
-        if wandb is not None:
-            wandb.log(save)
-        
-
+        return time_
 
            
-
-
-        # print("models to be updated:", model_to_update)
-        # for j in range(self.data.N_slices):
-        #     for index in model_to_update:
-
-        #         self.remove_points(dataset=self.data.shards, remove_indices=indices)
-
-
-        #         self.models[index].temp(dataset=self.data.slices[index][j],
-        #                                 n_epochs=n_epochs[index],
-        #                                 batch_size=batch_size,
-        #                                 learning_rate=learning_rate,
-        #                                 grad_clip=grad_clip,
-        #                                 alpha=alpha,
-        #                                 wandb=wandb,
-        #                                 train_path=save_path)
-            
 
 
     def forward(self, x):
@@ -530,6 +537,10 @@ class Pruning:
     def load(self, 
              save_path,
              device):
+        """
+        load model given path and device.
+        """
+        
         
         for i in range(self.data.N_shards):
             self.models[i].model.load_state_dict(torch.load(os.path.join(save_path, f'shard_{i}/slice_{self.data.N_slices-1}' + '/model.pt'), map_location=device))

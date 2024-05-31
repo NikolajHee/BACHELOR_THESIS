@@ -61,7 +61,7 @@ def train_test_dataset(dataset,
         np.random.seed(seed)
 
     # split indices
-    train_indices, test_indices = train_test_split(np.arange(0, len(dataset)), test_size=test_proportion)
+    train_indices, test_indices = train_test_split(np.arange(0, len(dataset)), test_size=test_proportion, random_state=seed)
 
     # create the datasets. 
     # The size of the datasets can be specified 
