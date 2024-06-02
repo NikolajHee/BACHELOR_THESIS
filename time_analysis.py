@@ -37,9 +37,9 @@ alpha = 0.5
 #from utils import random_seed
 #random_seed(seed)
 
-data_path = os.path.join(Path.cwd(), 'PTB_XL')
+data_path = os.path.join(Path.cwd(), 'BACHELOR_THESIS/BACHELOR_THESIS/PTB_XL')
 
-results_path = 'results'
+results_path = 'BACHELOR_THESIS/BACHELOR_THESIS/results'
 final_path = 'data_pruning'
 
 save_path = os.path.join(results_path, dataset_name, final_path)
@@ -71,14 +71,15 @@ train_dataset, test_dataset, D = train_test_dataset(dataset=dataset,
 from data_pruning import Pruning
 
 data_pruning = Pruning(dataset=train_dataset, 
-                    N_shards=N_shards, 
-                    N_slices=N_slices, 
-                    input_dim=D, 
-                    hidden_dim=hidden_dim, 
-                    output_dim=output_dim, 
-                    p=p, 
-                    device=DEVICE,
-                    classifier_name=classifier)
+                        N_shards=N_shards, 
+                        N_slices=N_slices, 
+                        input_dim=D, 
+                        hidden_dim=hidden_dim, 
+                        output_dim=output_dim, 
+                        p=p, 
+                        device=DEVICE,
+                        classifier_name=classifier,
+                        seed=seed)
 
 
 data_pruning.load(save_path=save_path , device=DEVICE)
@@ -108,5 +109,3 @@ for sp in sensitive_points:
                                 time_taking=time,
                                 test_dataset=test_dataset)
     
-    print(time_)
-

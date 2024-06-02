@@ -98,6 +98,9 @@ class ShardsAndSlices:
         """
         shard_contain = [x in shard for shard in self.shards]
 
+        assert (not all([not i for i in shard_contain])), \
+                f"{x} is not in any shard"
+
         # shard_index contains the shard on which the model should be retrained
         shard_index = np.argmax(shard_contain)
 
