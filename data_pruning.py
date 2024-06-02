@@ -102,7 +102,10 @@ class ShardsAndSlices:
         shard_index = np.argmax(shard_contain)
 
         slice_contain = [x in slice_ for slice_ in self.slices[shard_index]]
-        slice_index = np.sum(~np.array(slice_contain))
+
+        assert (all([not i for i in slice_contain]) == False)
+
+        slice_index = np.argmax(np.array(slice_contain))
 
         return shard_index, slice_index
     
