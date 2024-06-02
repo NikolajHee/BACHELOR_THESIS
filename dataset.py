@@ -200,6 +200,26 @@ class AEON_DATA_v2(AEON_DATA):
         return super().__getitem__(idx)
 
 
+class mia_train(Dataset):
+    def __init__(self, 
+                 train_dataset, 
+                 test_dataset,
+                 N_train,
+                 N_test):
+        self.train_dataset = train_dataset
+        self.test_dataset = test_dataset
+    
+    def __len__(self):
+        return len(self.train_dataset) + len(self.test_dataset)
+
+    def __getitem__(self, idx):
+        if len(self.train_dataset) > idx:
+            return self.train_dataset[idx] + (1,)
+        if len(self.train_dataset) <= idx:
+            return self.test_dataset[idx - len(self.train_dataset)] + (0,)
+
+
+
 if __name__ == '__main__':        
     data = PTB_XL_v2('/Users/nikolajhertz/Desktop/GIT/BACHELOR_THESIS/BACHELOR_THESIS/PTB_XL', multi_label=True)
 

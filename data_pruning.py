@@ -477,6 +477,7 @@ class Pruning:
         print(f'Updating models {models_to_be_updated}.')
         print(save)
         # remove all the points which should be unlearned
+        print(f"removing {indices}")
         self.data.remove_points(save, indices)
 
         # train the models that needs to be retrained

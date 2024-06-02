@@ -87,6 +87,8 @@ class AmnesiacTraining(TS2VEC):
                         "classifier/baseline": baseline})
 
         # main training loop
+        save_indices = [[] for _ in range(n_epochs)]
+
         for epoch in range(n_epochs):
             # new shuffle for each epoch
             train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
@@ -98,6 +100,8 @@ class AmnesiacTraining(TS2VEC):
 
             # evaluating each batch
             for i, (X, Y, indices) in enumerate(train_dataloader):
+
+                save_indices[epoch] += list(indices)
                 # is there any sensitive points in the batch
                 contain = any([i.item() in self.sensitive_points for i in indices])
 
@@ -201,6 +205,9 @@ class AmnesiacTraining(TS2VEC):
             # save the actual model
             torch.save(self.model.state_dict(), os.path.join(train_path, 'model.pt'))
 
+            f = open(os.path.join(train_path, 'save_indices.pickle'), "wb")
+            pickle.dump(step, f)
+            f.close()
 
     def unlearn(self, save_path, time_taking, const = 1):
         """
@@ -250,17 +257,17 @@ class AmnesiacTraining(TS2VEC):
         # choose classifier
         if classifier_name == 'svc':
             
-            classifier = svm.SVC(kernel='rbf') 
+            self.classifier = svm.SVC(kernel='rbf') 
 
         elif classifier_name == 'logistic':
             from sklearn.preprocessing import StandardScaler
             from sklearn.linear_model import LogisticRegression
             from sklearn.pipeline import make_pipeline
-            classifier = make_pipeline(StandardScaler(), LogisticRegression(max_iter=1000))
+            self.classifier = make_pipeline(StandardScaler(), LogisticRegression(max_iter=1000))
 
         elif classifier_name == 'knn':
             from sklearn.neighbors import KNeighborsClassifier
-            classifier = KNeighborsClassifier(n_neighbors=5)
+            self.classifier = KNeighborsClassifier(n_neighbors=5)
 
         else:
             raise ValueError(f'{classifier_name} is not a choice')
@@ -298,10 +305,10 @@ class AmnesiacTraining(TS2VEC):
             Y_train[i] = y
 
         # fit the classifier to the features (based on the training data)
-        classifier.fit(Z_train, Y_train)
+        self.classifier.fit(Z_train, Y_train)
 
         # calculate the accuracy on the training data
-        train_accuracy = np.mean(classifier.predict(Z_train) == Y_train)
+        train_accuracy = np.mean(self.classifier.predict(Z_train) == Y_train)
 
         # test loop to convert all data to features
         for i, (X, y, _) in enumerate(test_dataset):
@@ -319,7 +326,7 @@ class AmnesiacTraining(TS2VEC):
             Y_test[i] = y
 
         # calculate the accuracy on the test data
-        test_accuracy = np.mean(classifier.predict(Z_test) == Y_test)
+        test_accuracy = np.mean(self.classifier.predict(Z_test) == Y_test)
 
         # test loop to convert all data to features
         for i, (X, y, _) in enumerate(unlearn_dataset):
@@ -337,11 +344,26 @@ class AmnesiacTraining(TS2VEC):
             Y_unlearn[i] = y
 
         # calculate the accuracy on the test data
-        unlearn_accuracy = np.mean(classifier.predict(Z_unlearn) == Y_unlearn)
+        unlearn_accuracy = np.mean(self.classifier.predict(Z_unlearn) == Y_unlearn)
 
         return train_accuracy, test_accuracy, unlearn_accuracy
 
 
+    def predict_proba(self, x):
+        return self.classifier.predict_proba(x)
+    
+
+    def encode(self, x):
+        z = self.model.forward(x.float())
+
+        z = z.transpose(1,2) # N x Dr x T
+
+        # Maxpooling is inspried by the TS2VEC framework for classification
+        #   maxpooling over time instances!
+        z = F.max_pool1d(z, kernel_size=z.shape[2]) # N x Dr
+
+        z = z.detach().cpu().numpy().reshape(z.shape[0], -1)
+        return z
 
     def fine_tune(self,
               train_dataset,
