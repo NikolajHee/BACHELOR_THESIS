@@ -66,8 +66,8 @@ def train_test_dataset(dataset,
     # create the datasets. 
     # The size of the datasets can be specified 
     #   (but must be less than the total size determined by the test_proportion)
-    train_dataset = Subset(dataset, train_indices) if train_size is None else Subset(dataset, train_indices[:train_size])
-    test_dataset = Subset(dataset, test_indices) if test_size is None else Subset(dataset, test_indices[:test_size])
+    train_dataset = Subset(dataset, train_indices) if train_size is None else Subset(dataset, np.random.choice(train_indices, size=train_size, replace=False))
+    test_dataset = Subset(dataset, test_indices) if test_size is None else Subset(dataset, np.random.choice(train_indices, size=test_size, replace=False))
     
     # get the shape of the data
     [T, D] = train_dataset[0][0].shape
@@ -264,16 +264,4 @@ class random_cropping:
 #         return self.CNN(x)
 
 
-if __name__ =='__main__':
-    #save_parameters('', test='hej', test2='hej2', test3='hej4')
-    test = TimeTaking('')
-    test.start('hej')
-    time.sleep(2)
-    test.start('hej2')
-    time.sleep(2)
-    test.end('hej2')
-    test.end('hej')
-
-    test.save()
-
-
+#if __name__ =='__main__':

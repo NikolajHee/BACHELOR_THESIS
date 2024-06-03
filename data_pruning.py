@@ -100,9 +100,17 @@ class ShardsAndSlices:
 
         assert (not all([not i for i in shard_contain])), \
                 f"{x} is not in any shard"
+        
 
         # shard_index contains the shard on which the model should be retrained
         shard_index = np.argmax(shard_contain)
+
+        #print(shard_contain, shard_index)
+
+
+
+        #print([slice_.data_indices for slice_ in self.slices[shard_index]])
+        #print(x)
 
         slice_contain = [x in slice_ for slice_ in self.slices[shard_index]]
 
@@ -591,7 +599,7 @@ if __name__ == '__main__':
     time = TimeTaking(save_path=save_path, verbose=False)
 
     random_seed(1)
-    dataset = PTB_XL('/Users/nikolajhertz/Desktop/GIT/BACHELOR_THESIS/BACHELOR_THESIS/PTB_XL')
+    dataset = PTB_XL('/zhome/51/4/167677/Desktop/BACHELOR_THESIS/PTB_XL')
 
     from utils import train_test_dataset
     train_dataset, test_dataset, D = train_test_dataset(dataset=dataset,
@@ -605,42 +613,42 @@ if __name__ == '__main__':
 
     test.contains(train_dataset.indices[0])
 
-    test2 = Pruning(dataset=train_dataset, 
-                    N_shards=N_shards, 
-                    N_slices=N_slices, 
-                    input_dim=input_dim, 
-                    hidden_dim=hidden_dim, 
-                    output_dim=output_dim, 
-                    p=p, 
-                    device='cpu',
-                    classifier_name='logistic')
+    # test2 = Pruning(dataset=train_dataset, 
+    #                 N_shards=N_shards, 
+    #                 N_slices=N_slices, 
+    #                 input_dim=input_dim, 
+    #                 hidden_dim=hidden_dim, 
+    #                 output_dim=output_dim, 
+    #                 p=p, 
+    #                 device='cpu',
+    #                 classifier_name='logistic')
 
     
-    acc = test2.train(n_epochs=epochs, 
-                batch_size=batch_size, 
-                learning_rate=learning_rate, 
-                grad_clip=None, 
-                alpha=0.5, 
-                wandb=None, 
-                save_path=save_path, 
-                time_taking=time,
-                test_dataset=test_dataset)
+    # acc = test2.train(n_epochs=epochs, 
+    #             batch_size=batch_size, 
+    #             learning_rate=learning_rate, 
+    #             grad_clip=None, 
+    #             alpha=0.5, 
+    #             wandb=None, 
+    #             save_path=save_path, 
+    #             time_taking=time,
+    #             test_dataset=test_dataset)
     
-    print('-'*20)
-    print("UNLEARNING")
-    print('-'*20)
-    print(acc)
+    # print('-'*20)
+    # print("UNLEARNING")
+    # print('-'*20)
+    # print(acc)
 
-    test2.unlearn(indices=train_dataset.indices[0:3],
-                  n_epochs=epochs,
-                  batch_size=batch_size,
-                  learning_rate=learning_rate,
-                  grad_clip=None,
-                  alpha=0.5,
-                  wandb=None,
-                  save_path=save_path,
-                  time_taking=time,
-                  test_dataset=test_dataset
-                )
+    # test2.unlearn(indices=train_dataset.indices[0:3],
+    #               n_epochs=epochs,
+    #               batch_size=batch_size,
+    #               learning_rate=learning_rate,
+    #               grad_clip=None,
+    #               alpha=0.5,
+    #               wandb=None,
+    #               save_path=save_path,
+    #               time_taking=time,
+    #               test_dataset=test_dataset
+    #             )
 
-    time.save()
+    # time.save()

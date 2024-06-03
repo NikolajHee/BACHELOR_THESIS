@@ -218,6 +218,19 @@ class mia_train(Dataset):
         if len(self.train_dataset) <= idx:
             return self.test_dataset[idx - len(self.train_dataset)] + (0,)
 
+class mia_data(Dataset):
+    def __init__(self, 
+                 dataset,
+                 label):
+        self._dataset = dataset
+        self._label = label
+    
+    def __len__(self):
+        return len(self._dataset)
+
+    def __getitem__(self, idx):
+        return self._dataset[idx] + (self.label,)
+
 
 
 if __name__ == '__main__':        

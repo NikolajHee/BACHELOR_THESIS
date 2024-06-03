@@ -87,7 +87,7 @@ class AmnesiacTraining(TS2VEC):
                         "classifier/baseline": baseline})
 
         # main training loop
-        save_indices = [[] for _ in range(n_epochs)]
+        self.save_indices = [[] for _ in range(n_epochs)]
 
         for epoch in range(n_epochs):
             # new shuffle for each epoch
@@ -101,11 +101,11 @@ class AmnesiacTraining(TS2VEC):
             # evaluating each batch
             for i, (X, Y, indices) in enumerate(train_dataloader):
 
-                save_indices[epoch] += list(indices)
+                self.save_indices[epoch] += list(indices)
                 # is there any sensitive points in the batch
                 contain = any([i.item() in self.sensitive_points for i in indices])
 
-                if contain: print('detected sensitive')
+                #if contain: print('detected sensitive')
                 
                 X = X.to(self.device) # N x T x D
                 
@@ -183,10 +183,10 @@ class AmnesiacTraining(TS2VEC):
                                                                            train_loader=train_dataloader, 
                                                                            test_loader=test_dataloader, 
                                                                            device=self.device)
-
-                wandb.log({"classifier/train_accuracy": train_accuracy, 
-                           "classifier/test_accuracy": test_accuracy, 
-                           "classifier/baseline": baseline})
+                if wandb:
+                    wandb.log({"classifier/train_accuracy": train_accuracy, 
+                             "classifier/test_accuracy": test_accuracy, 
+                             "classifier/baseline": baseline})
                 
 
 
@@ -197,8 +197,8 @@ class AmnesiacTraining(TS2VEC):
                                     train_dataloader=train_dataloader,
                                     test_dataloader=test_dataloader,
                                     device=self.device)
-                
-                wandb.log({"t_sne/train_t_sne": fig_train, "t_sne/test_t_sne": fig_test})
+                if wandb:
+                    wandb.log({"t_sne/train_t_sne": fig_train, "t_sne/test_t_sne": fig_test})
 
 
 
@@ -206,41 +206,58 @@ class AmnesiacTraining(TS2VEC):
             torch.save(self.model.state_dict(), os.path.join(train_path, 'model.pt'))
 
             f = open(os.path.join(train_path, 'save_indices.pickle'), "wb")
-            pickle.dump(step, f)
+            pickle.dump(self.save_indices, f)
             f.close()
 
-    def unlearn(self, save_path, time_taking, const = 1):
+    def unlearn(self, sp, save_path, time_taking, const = 1):
         """
         Unlearns all the sensitive points
         """
 
-        time_taking.start('Overall training')
+        time_taking.start('Overall unlearning')
 
-        gradients = glob.glob(os.path.join(save_path, '/*.pkl'))
+        valid_grad = []
 
-        sorted(gradients)
+        # keep all relevant gradients
+        for x in sp:
+            N_batch = len(self.save_indices[0])//8
+  
+            for nepoch in range(len(self.save_indices)):
+                for i in range(N_batch):
+                    if x in self.save_indices[nepoch][8*i:8*(i+1)]:
+                        #print(f"{x} is in {self.save_indices[nepoch][8*i:8*(i+1)]} ({nepoch},{i:04})")
+                        valid_grad.append(f"e{nepoch}b{i:04}.pkl")
+            
 
-        for grad in gradients:
+
+
+        for grad in valid_grad:
             path = os.path.join(save_path, grad)
 
             f = open(path, "rb")
-
             steps = pickle.load(f)
-
             f.close()
             
             with torch.no_grad():
-                state = self.encoder.state_dict()
+                state = self.model.state_dict()
                 for param_tensor in state:
                     if "weight" in param_tensor or "bias" in param_tensor:
                         state[param_tensor] = state[param_tensor] - const*steps[param_tensor]
 
-        time_taking.end('Overall training')
+        time_taking.end('Overall unlearning')
+
+        time = time_taking.output_dict('Overall unlearning')
 
         time_taking.save()
 
+        return time
+
     def load(self, path):
-        self.model.load_state_dict(torch.load(path))
+        f = open(os.path.join(path, 'save_indices.pickle'), "rb")
+        self.save_indices = pickle.load(f)
+        f.close()
+
+        self.model.load_state_dict(torch.load(os.path.join(path, 'model.pt')))
 
     def evaluate(self,
                  train_dataset,
