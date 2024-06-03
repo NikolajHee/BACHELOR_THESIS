@@ -220,6 +220,21 @@ class mia_train(Dataset):
 
 
 
+class shuffle(Dataset):
+    def __init__(self, dataset, seed):
+        np.random.seed(seed)
+
+        self.data = dataset
+
+        self._indices = np.random.choice(self.data.indices, size=len(self.data.indices), replace=False)
+
+
+    def __getitem__(self, idx):
+        return self.data[self._indices[idx]]
+
+
+
+
 if __name__ == '__main__':        
     data = PTB_XL_v2('/Users/nikolajhertz/Desktop/GIT/BACHELOR_THESIS/BACHELOR_THESIS/PTB_XL', multi_label=True)
 

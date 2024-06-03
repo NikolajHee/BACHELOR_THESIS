@@ -567,8 +567,8 @@ if __name__ == '__main__':
     train_size = 60
     test_size = 100
     test_proportion = 0.3
-    N_shards = 4
-    N_slices = 3
+    N_shards = 2
+    N_slices = 2
     input_dim = 12
     hidden_dim = 32
     output_dim = 320

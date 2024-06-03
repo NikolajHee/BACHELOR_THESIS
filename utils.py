@@ -66,8 +66,8 @@ def train_test_dataset(dataset,
     # create the datasets. 
     # The size of the datasets can be specified 
     #   (but must be less than the total size determined by the test_proportion)
-    train_dataset = Subset(dataset, train_indices) if train_size is None else Subset(dataset, train_indices[:train_size])
-    test_dataset = Subset(dataset, test_indices) if test_size is None else Subset(dataset, test_indices[:test_size])
+    train_dataset = Subset(dataset, train_indices) if train_size is None else Subset(dataset, np.random.choice(train_indices, size=train_size, replace=False))
+    test_dataset = Subset(dataset, test_indices) if test_size is None else Subset(dataset, np.random.choice(train_indices, size=test_size, replace=False))
     
     # get the shape of the data
     [T, D] = train_dataset[0][0].shape
@@ -88,6 +88,68 @@ def train_test_dataset(dataset,
         test_dataset.std = np.std(X)
 
     return train_dataset, test_dataset, D
+
+
+def mia_train_test_dataset(in_dataset,
+                           out_dataset,
+                           N_train,
+                           N_test,
+                           seed):
+    
+   
+    out_indices = out_dataset.indices
+    in_indices = in_dataset.indices
+
+    _N_out = len(out_indices) 
+    _N_in = len(in_indices) 
+
+    out_indices = np.random.choice(out_indices, size=_N_out, replace=False)
+    in_indices = np.random.choice(in_indices, size=_N_in, replace=False)
+
+    train_part_out = Subset(out_dataset.dataset, out_indices[:_N_out//2])
+    train_part_in = Subset(in_dataset.dataset, in_indices[:_N_in//2])
+
+    mia_train_data = combine(train_part_out, train_part_in, seed)
+
+    test_part_out = Subset(out_dataset.dataset, out_indices[_N_out//2:])
+    test_part_in = Subset(in_dataset.dataset, in_indices[_N_in//2:])
+
+    mia_test_data = combine(test_part_out, test_part_in, seed)
+
+    return mia_train_data, mia_test_data
+
+
+
+from torch.utils.data import Dataset
+
+
+class combine(Dataset):
+    def __init__(self, data_1, data_2, seed):
+
+        np.random.seed(seed)
+
+        self.data_1 = data_1
+        self.data_2 = data_2
+
+        self.bin_indices = np.random.choice(np.r_[np.zeros(len(data_1)),  np.ones(len(data_2))], size=len(self), replace=False).astype(np.bool_)
+        self._indices = np.zeros(len(self)).astype(np.int32)
+
+        self._indices[~self.bin_indices] = np.arange(len(self.data_1))#.indices
+        self._indices[self.bin_indices] = np.arange(len(self.data_2))#.indices
+
+    
+    def __len__(self):
+        return len(self.data_1) + len(self.data_2)
+
+    def __getitem__(self, idx):
+        if self.bin_indices[idx]:
+            return self.data_1[self._indices[idx]] + (0,)
+        else:
+            return self.data_2[self._indices[idx]] + (1,)
+
+
+
+
 
 def baseline(train_dataset, test_dataset):
     """
@@ -265,15 +327,23 @@ class random_cropping:
 
 
 if __name__ =='__main__':
-    #save_parameters('', test='hej', test2='hej2', test3='hej4')
-    test = TimeTaking('')
-    test.start('hej')
-    time.sleep(2)
-    test.start('hej2')
-    time.sleep(2)
-    test.end('hej2')
-    test.end('hej')
 
-    test.save()
+
+    from dataset import PTB_XL
+    dataset = PTB_XL('BACHELOR_THESIS/BACHELOR_THESIS/PTB_XL')
+
+
+
+    train_dataset, test_dataset, D = train_test_dataset(dataset=dataset,
+                                                        test_proportion=0.3,
+                                                        train_size=3000,
+                                                        test_size=2000,
+                                                        seed=1,
+                                                        return_stand=False)  
+
+    test1, test2 = mia_train_test_dataset(out_dataset=test_dataset, in_dataset=train_dataset, N_train=None, N_test=None, seed=1)       
+
+
+    print('abe')
 
 
