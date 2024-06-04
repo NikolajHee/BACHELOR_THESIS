@@ -152,9 +152,12 @@ class PTB_XL_v2(PTB_XL):
         super().__init__(data_path=data_path,
                          sampling_rate=sampling_rate,
                          multi_label=multi_label)
+        
+        self.hypermode = False
 
 
     def __getitem__(self, idx):
+        if self.hypermode: return super().__getitem__(idx)
         return super().__getitem__(idx) + (idx, )
     
     def test(self):

@@ -366,8 +366,19 @@ class AmnesiacTraining(TS2VEC):
         return train_accuracy, test_accuracy, unlearn_accuracy
 
 
-    def predict_proba(self, x):
-        return self.classifier.predict_proba(x)
+    def predict_proba(self, x, device):
+        
+        if type(x) is np.ndarray: x = torch.tensor(x)
+
+        if len(x.shape) == 2: x = x[None,:,:]
+
+        z = self.model.forward(x.to(device).float())
+        
+        z = z.transpose(1,2)
+        z = F.max_pool1d(z, kernel_size=z.shape[2])
+        z = z.detach().cpu().numpy().reshape(z.shape[0], -1)
+
+        return self.classifier.predict_proba(z)
     
 
     def encode(self, x):
