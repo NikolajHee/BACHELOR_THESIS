@@ -97,7 +97,7 @@ def mia_train_test_dataset(in_dataset,
                            seed):
     
    
-    out_indices = out_dataset.indices
+    out_indices = out_dataset.indices[:N_test]
     in_indices = in_dataset.indices
 
     _N_out = len(out_indices) 

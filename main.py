@@ -127,11 +127,15 @@ def main(sweep=True):
     if arguments['seed'] is not None:
         random_seed(arguments['seed'])
 
+    
+    from pathlib import Path
+    data_path = os.path.join(Path.cwd(), 'PTB_XL')
+
 
     # load data
     if arguments['dataset'] == 'PTB_XL':
         from dataset import PTB_XL
-        dataset = PTB_XL()
+        dataset = PTB_XL(data_path)
     else:
         from dataset import AEON_DATA
         # UCR and UEA datasets

@@ -201,6 +201,8 @@ class Pruning:
                                'output_dim': output_dim,
                                'p':p,
                                'device':device}
+        
+        self.output_dim = output_dim
 
         for i in range(N_shards):
             model = TS2VEC(**self.model_settings)
@@ -218,6 +220,8 @@ class Pruning:
                X):
         
             # encode the data
+            if type(X) is np.ndarray: X = torch.tensor(X)
+  
             z = model.model(X.float().to(self.device))
 
             # maxpool over time dimension
@@ -489,9 +493,9 @@ class Pruning:
             #model_to_update.add(shard_index)
 
         print(f'Updating models {models_to_be_updated}.')
-        print(save)
+        #print(save)
         # remove all the points which should be unlearned
-        print(f"removing {indices}")
+        #print(f"removing {indices}")
         self.data.remove_points(save, indices)
 
         # train the models that needs to be retrained
@@ -507,7 +511,7 @@ class Pruning:
 
                 # if the min-slice is above 1, the path should be given
 
-                print(f'Starting train, shard: {shard_index}, slice: {slice_index}.')
+                #print(f'Starting train, shard: {shard_index}, slice: {slice_index}.')
                 self.train_temp(shard_index=shard_index,
                                 slice_index=min(slice_index),
                                 n_epochs=n_epochs,
@@ -548,6 +552,33 @@ class Pruning:
         unique, counts = np.unique(y, return_counts=True)
 
         return unique[np.argmax(counts)]
+    
+    def predict_proba(self, x, device):
+
+        if len(x.shape) == 2:
+            x = x[None,:,:]
+            N = 1
+        else:
+            N = x.shape[0]
+
+        prob = np.zeros((N,len(self.classifiers[0].classes_)))
+
+        for (model, classifier) in zip(self.models, self.classifiers):
+            # z = model.model.forward(x.to(device).float()[None,:,:])
+            
+            # z = z.transpose(1,2)
+            # z = F.max_pool1d(z, kernel_size=z.shape[2])
+            # z = z.detach().cpu().numpy().reshape(z.shape[0], -1)
+
+            z = self.encode(model, x)
+
+            #print(z.shape)
+            #print(classifier.predict_proba(z).shape)
+
+
+            prob += classifier.predict_proba(z)
+        
+        return prob/len(self.models)
     
     def load(self, 
              save_path,

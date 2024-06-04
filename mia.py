@@ -36,9 +36,8 @@ class MIA_base():
         predicted = np.zeros(len(dataset))
 
         for i, (x, y, _, contained) in enumerate(dataset):
-            z = model.encode(x.to(self.device)[None,:,:])
 
-            predicted[i] = self.predict(model, z, y)
+            predicted[i] = self.predict(model, x, y)
 
             contains[i] = contained
 
@@ -56,7 +55,7 @@ class PredictionCorrectnessMIA(MIA_base):
 
 
     def predict(self, model, x, y):
-        y_pred = model.predict_proba(x)
+        y_pred = model.predict_proba(x, self.device)
 
         y_pred = np.argmax(y_pred, axis=1)
         
@@ -73,7 +72,7 @@ class PredictionConfidenceBasedMIA(MIA_base):
         super().__init__(device)
 
     def metric(self, model, x, y):
-        y_pred = model.predict_proba(x)
+        y_pred = model.predict_proba(x, self.device)
 
         return np.max(y_pred, axis=1)
     
@@ -96,7 +95,7 @@ class PredictionEntropyBasedMIA(MIA_base):
         super().__init__(device)
     
     def metric(self, model, x, y):
-        y_pred = model.predict_proba(x)
+        y_pred = model.predict_proba(x, self.device)
 
         return -np.sum(y_pred * np.log(y_pred), axis=1)
     
@@ -119,7 +118,7 @@ class ModifiedPredictionEntropyBasedMIA(MIA_base):
 
     
     def metric(self, model, x, y):
-        y_pred = model.predict_proba(x).T
+        y_pred = model.predict_proba(x, self.device).T
 
         mask = (1 - np.array(y)).astype(np.bool_)
 
@@ -148,28 +147,31 @@ class MIA:
 
         self.device = device
     
-    def matrix(self, model, train):
-        zs = np.zeros((len(train), model.output_dim))
+    def matrix(self, train):
+        T, D = train[0][0].shape
 
+        xs = np.zeros((len(train), T, D))
         ys = np.zeros((len(train)))
 
         contains = np.zeros((len(train)))
 
+
+
         for i, (x, y, _, contained) in enumerate(train):
-            zs[i, :] = model.encode(x.to(self.device)[None, :, :])
+            xs[i, :, :] = x.numpy()
             ys[i] = y
             contains[i] = contained
 
-        return zs, ys, contains
+        return xs, ys, contains
 
 
     def train(self, model, train_data):
-        zs, ys, contains = self.matrix(model, train_data)
+        xs, ys, contains = self.matrix(train_data)
 
         train_accuracies = []
 
         for mia in [self.PredictionCorrectnessMIA, self.PredictionConfidenceBasedMIA, self.PredictionEntropyBasedMIA, self.ModifiedPredictionEntropyBasedMIA]:
-            mia.train(model, zs, ys, contains)
+            mia.train(model, xs, ys, contains)
 
             train_accuracies.append(mia.evaluate(train_data, model))
         
