@@ -48,6 +48,8 @@ save_path = os.path.join(results_path, dataset_name, final_path)
 
 from utils import random_seed
 
+from utils import random_seed
+
 random_seed(1)
 
 if dataset_name == 'PTB_XL':

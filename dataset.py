@@ -65,7 +65,7 @@ class PTB_XL(Dataset):
         self.df['diagnostic_superclass'] = self.df.scp_codes.apply(aggregate_diagnostic)
 
         # create binary label (1 if NORM, 0 else)
-        self.df['binary_label'] = [1 - (i == ['NORM']) for i in self.df.diagnostic_superclass]
+        self.df['binary_label'] = [1 - ('NORM' in i) for i in self.df.diagnostic_superclass]
 
         # self.test()
         self.ml = False
@@ -257,6 +257,10 @@ if __name__ == '__main__':
     data = PTB_XL_v2('/Users/nikolajhertz/Desktop/GIT/BACHELOR_THESIS/BACHELOR_THESIS/PTB_XL', multi_label=True)
 
     #print(data[0:10])
+
+    ys = np.zeros((len(data), 5))
+    for i in range(len(data)):
+        ys[i] = data[i][1]
 
     loader = DataLoader(data, batch_size=32, shuffle=False)
 
