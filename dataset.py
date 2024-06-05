@@ -1,8 +1,10 @@
 """
 Pytorch dataloaders.
-    - PTB_XL
-    - AEON_DATA
+    * PTB_XL
+    * AEON_DATA
         (UCR and UEA datasets)
+    * PTB_XL_v2
+    * AEON_DATA_v2
 """
 
 # imports
