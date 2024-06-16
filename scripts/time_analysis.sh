@@ -1,7 +1,7 @@
 #!/bin/sh 
 ### General options
 ### –- specify queue --
-#BSUB -q gpua10
+#BSUB -q gpuv100
 ### -- set the job Name --
 #BSUB -J time_analysis
 ### -- ask for number of cores (default: 1) --
@@ -9,7 +9,7 @@
 ### -- Select the resources: 1 gpu in exclusive process mode --
 #BSUB -gpu "num=1:mode=exclusive_process"
 ### -- set walltime limit: hh:mm --  maximum 24 hours for GPU-queues right now
-#BSUB -W 7:00
+#BSUB -W 24:00
 # request 5GB of system-memory
 #BSUB -R "rusage[mem=1GB]"
 ### -- set the email address --
@@ -18,13 +18,13 @@
 ##BSUB -u your_email_address
 ### -- Specify the output and error file. %J is the job-id --
 ### -- -o and -e mean append, -oo and -eo mean overwrite --
-#BSUB -o tsac_%J.out
-#BSUB -e tsac_%J.err
+#BSUB -o tsdp_%J.out
+#BSUB -e tsdp_%J.err
 # -- end of LSF options --
 
 
 module load scipy/1.9.1-python-3.9.14
 
-source venv/bin/activate
+source ../venv/bin/activate
 
-python3 ts2vec_accuracy.py --dataset Crop
+python3 ../time_analysis.py

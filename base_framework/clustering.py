@@ -49,7 +49,7 @@ def tsne(H,
         if type(y) is tuple:
             y = np.array(y)
         else:
-            y = y.numpy()
+            y = y[0].numpy()
 
         Z_train[i*batch_size:(i+1)*batch_size] = z.reshape(batch_size, output_dim)
         Y_train[i*batch_size:(i+1)*batch_size] = y.reshape(batch_size)
@@ -87,7 +87,7 @@ def tsne(H,
         if type(y) is tuple:
             y = np.array(y)
         else:
-            y = y.numpy()
+            y = y[0].numpy()
 
         Z_test[i*batch_size:(i+1)*batch_size] = z.reshape(batch_size, output_dim)
         Y_test[i*batch_size:(i+1)*batch_size] = y.reshape(batch_size)
