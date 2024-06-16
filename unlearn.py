@@ -13,7 +13,7 @@ import wandb
 from datetime import datetime
 
 # own functions
-from utils import save_parameters, random_seed, TimeTaking
+from base_framework.utils import save_parameters, random_seed, TimeTaking
 
 
 # pytorch device
@@ -77,12 +77,12 @@ def folder_structure(save_path, N_shards, N_slices):
 now = datetime.now()
 dt_string = now.strftime("(%d_%m_%Y)_(%H_%M_%S)")
 
-wandb.init(project="BACHELOR_THESIS",
+wandb.init(project="BP_final",
             name='UNLEARNING_' + args.strategy,
             config=arguments)
 
 if args.seed:
-    from utils import random_seed
+    from base_framework.utils import random_seed
     random_seed(args.seed)
 
 data_path = os.path.join(Path.cwd(), 'PTB_XL')
@@ -109,23 +109,23 @@ if args.strategy == 'amnesiac_unlearning':
     os.makedirs(save_path, exist_ok=True)
 
     if args.dataset == 'PTB_XL':
-        from dataset import PTB_XL_v2
+        from base_framework.dataset import PTB_XL_v2
         dataset = PTB_XL_v2(data_path)
     else:
-        from dataset import AEON_DATA_v2
+        from base_framework.dataset import AEON_DATA_v2
         # UCR and UEA datasets
         dataset = AEON_DATA_v2(arguments['dataset'])
 
 
 
-    from utils import train_test_dataset
+    from base_framework.utils import train_test_dataset
     train_dataset, test_dataset, D = train_test_dataset(dataset=dataset,
                                                         test_proportion=0.3,
                                                         train_size=args.N_train,
                                                         test_size=args.N_test,
                                                         seed=args.seed,
                                                         return_stand=args.normalize)
-    from amnesiac import AmnesiacTraining
+    from base_framework.amnesiac import AmnesiacTraining
     model = AmnesiacTraining(input_dim=D,
                              hidden_dim=args.hidden_dim,
                              output_dim=args.output_dim,
@@ -152,15 +152,15 @@ if args.strategy == 'amnesiac_unlearning':
 
 if args.strategy == 'data_pruning':
     if args.dataset == 'PTB_XL':
-        from dataset import PTB_XL
+        from base_framework.dataset import PTB_XL
         dataset = PTB_XL(data_path)
     else:
-        from dataset import AEON_DATA
+        from base_framework.dataset import AEON_DATA
         # UCR and UEA datasets
         dataset = AEON_DATA(arguments['dataset'])
 
 
-    from utils import train_test_dataset
+    from base_framework.utils import train_test_dataset
     train_dataset, test_dataset, D = train_test_dataset(dataset=dataset,
                                                         test_proportion=0.3,
                                                         train_size=args.N_train,
@@ -192,7 +192,7 @@ if args.strategy == 'data_pruning':
 
     save_path = folder_structure(save_path=save_path, N_shards=args.N_shards, N_slices=args.N_slices)
     
-    from data_pruning import Pruning
+    from base_framework.data_pruning import Pruning
 
     data_pruning = Pruning(dataset=train_dataset, 
                      N_shards=args.N_shards, 
@@ -217,55 +217,55 @@ if args.strategy == 'data_pruning':
                         time_taking=time,
                         test_dataset=test_dataset)
     
-    from torch.utils.data import Subset
+    # from torch.utils.data import Subset
 
-    ind_train_acc = data_pruning.train_classifiers()
-    unlearn_acc, ind_unlearn_acc = data_pruning.evaluate(Subset(train_dataset.dataset, train_dataset.indices[0:args.sensitive_points]))
-    test_acc, ind_test_acc = data_pruning.evaluate(test_dataset)
+    # ind_train_acc = data_pruning.train_classifiers()
+    # unlearn_acc, ind_unlearn_acc = data_pruning.evaluate(Subset(train_dataset.dataset, train_dataset.indices[0:args.sensitive_points]))
+    # test_acc, ind_test_acc = data_pruning.evaluate(test_dataset)
 
-    save = {'ind_train_acc': ind_train_acc,
-            'ind_unlearn_acc': ind_unlearn_acc,
-            'ind_test_acc': ind_test_acc,
-            "unlearn_acc": unlearn_acc,
-            "test_acc": test_acc}
-
-
-
-
-    with open(args.dataset + '_' + args.strategy + '_before_accuracy.pickle', 'wb') as handle:
-        pickle.dump(save, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-
-    time = data_pruning.unlearn(indices=train_dataset.indices[0:args.sensitive_points],
-                         n_epochs=args.n_epochs,
-                         batch_size=args.batch_size,
-                         learning_rate=args.learning_rate,
-                         grad_clip=args.grad_clip,
-                         alpha=args.alpha,
-                         wandb=wandb,
-                         save_path=save_path,
-                         time_taking=time,
-                         test_dataset=test_dataset)
-
-    print(time)
-
-    wandb.log({'time': time})
-
-    ind_train_acc = data_pruning.train_classifiers()
-    unlearn_acc, ind_unlearn_acc = data_pruning.evaluate(Subset(train_dataset.dataset, train_dataset.indices[0:args.sensitive_points]))
-    test_acc, ind_test_acc = data_pruning.evaluate(test_dataset)
-
-    save = {'ind_train_acc': ind_train_acc,
-            'ind_unlearn_acc': ind_unlearn_acc,
-            'ind_test_acc': ind_test_acc,
-            "unlearn_acc": unlearn_acc,
-            "test_acc": test_acc}
+    # save = {'ind_train_acc': ind_train_acc,
+    #         'ind_unlearn_acc': ind_unlearn_acc,
+    #         'ind_test_acc': ind_test_acc,
+    #         "unlearn_acc": unlearn_acc,
+    #         "test_acc": test_acc}
 
 
 
 
-    with open(args.dataset + '_' + args.strategy + '_after_accuracy.pickle', 'wb') as handle:
-        pickle.dump(save, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    # with open(args.dataset + '_' + args.strategy + '_before_accuracy.pickle', 'wb') as handle:
+    #     pickle.dump(save, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+    # time = data_pruning.unlearn(indices=train_dataset.indices[0:args.sensitive_points],
+    #                      n_epochs=args.n_epochs,
+    #                      batch_size=args.batch_size,
+    #                      learning_rate=args.learning_rate,
+    #                      grad_clip=args.grad_clip,
+    #                      alpha=args.alpha,
+    #                      wandb=wandb,
+    #                      save_path=save_path,
+    #                      time_taking=time,
+    #                      test_dataset=test_dataset)
+
+    # print(time)
+
+    # wandb.log({'time': time})
+
+    # ind_train_acc = data_pruning.train_classifiers()
+    # unlearn_acc, ind_unlearn_acc = data_pruning.evaluate(Subset(train_dataset.dataset, train_dataset.indices[0:args.sensitive_points]))
+    # test_acc, ind_test_acc = data_pruning.evaluate(test_dataset)
+
+    # save = {'ind_train_acc': ind_train_acc,
+    #         'ind_unlearn_acc': ind_unlearn_acc,
+    #         'ind_test_acc': ind_test_acc,
+    #         "unlearn_acc": unlearn_acc,
+    #         "test_acc": test_acc}
+
+
+
+
+    # with open(args.dataset + '_' + args.strategy + '_after_accuracy.pickle', 'wb') as handle:
+    #     pickle.dump(save, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 

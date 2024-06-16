@@ -9,7 +9,7 @@ import numpy as np
 from datetime import datetime
 
 # own functions
-from utils import save_parameters, random_seed, TimeTaking, train_test_dataset
+from base_framework.utils import save_parameters, random_seed, TimeTaking, train_test_dataset
 
 
 # pytorch device
@@ -20,15 +20,15 @@ print(f"device: {DEVICE}")
 # parameters
 seed = 1
 dataset_name = 'PTB_XL'
-N_train = 3000
-N_test = 2000
+N_train = 300
+N_test = 200
 normalize = False
 N_shards = 5
 N_slices = 3
 hidden_dim = 32
 output_dim = 64
 classifier = 'logistic'
-sensitive_points = 256
+sensitive_points = 128
 n_epochs =[5, 5, 5]
 batch_size = 8
 learning_rate = 1e-3
@@ -53,10 +53,10 @@ random_seed(1)
 
 # load data
 if dataset_name == 'PTB_XL':
-    from dataset import PTB_XL
+    from base_framework.dataset import PTB_XL
     dataset = PTB_XL(data_path)
 else:
-    from dataset import AEON_DATA
+    from base_framework.dataset import AEON_DATA
     # UCR and UEA datasets
     dataset = AEON_DATA(dataset_name)
 
@@ -70,7 +70,7 @@ train_dataset, test_dataset, D = train_test_dataset(dataset=dataset,
 
 
 
-from data_pruning import Pruning
+from base_framework.data_pruning import Pruning
 
 save_accuracy = np.zeros((N_rep, 4)) 
 # [before_test_accuracy, before_unlearn_accuracy]
@@ -78,6 +78,7 @@ save_accuracy = np.zeros((N_rep, 4))
 
 save_mia = np.zeros((N_rep, 4*4))
 
+extra_mia = np.zeros((N_rep, 4))
 
 for rep in range(N_rep):
     data_pruning = Pruning(dataset=train_dataset, 
@@ -128,8 +129,8 @@ for rep in range(N_rep):
     #* MIA
 
     #from dataset import mia_train, mia_data
-    from utils import mia_train_test_dataset
-    from mia import MIA
+    from base_framework.utils import mia_train_test_dataset
+    from base_framework.mia import MIA, mia_loss
 
     # # train data
     # train_mia = mia_train(train_dataset=train_dataset,
@@ -140,6 +141,7 @@ for rep in range(N_rep):
 
     mia = MIA(device=DEVICE)
 
+    #mia2 = mia_loss(device=DEVICE)
 
 
     mia_train, mia_test = mia_train_test_dataset(in_dataset=unlearning_data, 
@@ -148,13 +150,27 @@ for rep in range(N_rep):
                                                  N_test=len(unlearning_data), 
                                                  seed=1)
     
-    print(len(mia_train), len(mia_test))
+
+    # mia2.train_dp(data_pruning, mia_train)
+
+    # test1 = mia2.evaluate_dp(data_pruning, mia_train)
+    # test2 = mia2.evaluate_dp(data_pruning, mia_test)
+
+    # print('hej')
+    # print(test1, test2)
+
+    # extra_mia[rep, 0] = test1
+    # extra_mia[rep, 1] = test2
+
+
 
     train_accuracy = mia.train(model=data_pruning, 
                                train_data=mia_train)
     
     test_accuracy = mia.evaluate(model=data_pruning,
                                  data=mia_test)
+    
+    print(train_accuracy, test_accuracy)
 
     save_mia[rep, :4] = np.array(train_accuracy)
     save_mia[rep, 4:8] = np.array(test_accuracy)
@@ -200,6 +216,7 @@ for rep in range(N_rep):
 
     mia = MIA(device=DEVICE)
 
+    # mia2 = mia_loss(device=DEVICE)
 
     mia_train, mia_test = mia_train_test_dataset(in_dataset=unlearning_data, 
                                                  out_dataset=test_dataset, 
@@ -207,16 +224,31 @@ for rep in range(N_rep):
                                                  N_test=len(unlearning_data), 
                                                  seed=1)
     
+
+
+    # mia2.train_dp(data_pruning, mia_train)
+
+    # test1 = mia2.evaluate_dp(data_pruning, mia_train)
+    # test2 = mia2.evaluate_dp(data_pruning, mia_test)
+
+    # print('hej2')
+    # print(test1, test2)
+
+    # extra_mia[rep, 2] = test1
+    # extra_mia[rep, 3] = test2
+
     train_accuracy = mia.train(model=data_pruning, 
                                train_data=mia_train)
     
     test_accuracy = mia.evaluate(model=data_pruning,
                                  data=mia_test)
     
+    print(train_accuracy, test_accuracy)
+    
     save_mia[rep, 8:12] = np.array(train_accuracy)
     save_mia[rep, 12:16] = np.array(test_accuracy)
 
 
     #* Save
-    np.save(os.path.join(save_path, 'save_accuracy.npy'), save_accuracy)
-    np.save(os.path.join(save_path, 'save_mia.npy'), save_mia)
+    #np.save(os.path.join(save_path, 'save_accuracy.npy'), save_accuracy)
+    #np.save(os.path.join(save_path, 'save_mia.npy'), save_mia)
