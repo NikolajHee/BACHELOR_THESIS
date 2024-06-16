@@ -2,6 +2,17 @@
 utils.py
 - This script contains utility functions that are used in 
   the different scripts in the BACHELOR_THESIS folder.
+
+* random_seed
+* save_parameters
+* train_test_dataset
+* mia_train_test_dataset
+* combine
+* baseline
+* cool_plots
+* TimeTaking
+
+
 """
 
 

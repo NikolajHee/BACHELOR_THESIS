@@ -243,6 +243,7 @@ class AmnesiacTraining(TS2VEC):
                 for param_tensor in state:
                     if "weight" in param_tensor or "bias" in param_tensor:
                         state[param_tensor] = state[param_tensor] - const*steps[param_tensor]
+            model.load_state_dict(state)
 
         time_taking.end('Overall unlearning')
 
@@ -252,12 +253,13 @@ class AmnesiacTraining(TS2VEC):
 
         return time
 
-    def load(self, path):
+
+    def load(self, path, device):
         f = open(os.path.join(path, 'save_indices.pickle'), "rb")
         self.save_indices = pickle.load(f)
         f.close()
 
-        self.model.load_state_dict(torch.load(os.path.join(path, 'model.pt')))
+        self.model.load_state_dict(torch.load(os.path.join(path, 'model.pt'), map_location=device))
 
     def evaluate(self,
                  train_dataset,

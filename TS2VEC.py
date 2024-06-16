@@ -354,8 +354,8 @@ class TS2VEC(nn.Module):
                 optimizer.zero_grad()
 
                 # input augments to model
-                z1 = self.model.forward(signal_aug_1.float()) # (N x T1 x Dr)
-                z2 = self.model.forward(signal_aug_2.float()) # (N x T2 x Dr)
+                z1 = self.encoder.forward(signal_aug_1.float()) # (N x T1 x Dr)
+                z2 = self.encoder.forward(signal_aug_2.float()) # (N x T2 x Dr)
                 
 
                 # evaluate the loss on the overlapping part
