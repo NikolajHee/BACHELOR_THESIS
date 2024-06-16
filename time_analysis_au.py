@@ -10,7 +10,7 @@ import numpy as np
 from datetime import datetime
 
 # own functions
-from utils import save_parameters, random_seed, TimeTaking
+from base_framework.utils import save_parameters, random_seed, TimeTaking
 
 
 # pytorch device
@@ -44,20 +44,20 @@ final_path = 'amnesiac_unlearning'
 save_path = os.path.join(results_path, dataset_name, final_path)
 
 
-from utils import random_seed
+from base_framework.utils import random_seed
 
 random_seed(1)
 
 if dataset_name == 'PTB_XL':
-    from dataset import PTB_XL_v2
+    from base_framework.dataset import PTB_XL_v2
     dataset = PTB_XL_v2(data_path)
 else:
-    from dataset import AEON_DATA_v2
+    from base_framework.dataset import AEON_DATA_v2
     # UCR and UEA datasets
     dataset = AEON_DATA_v2(dataset_name)
 
 
-from utils import train_test_dataset
+from base_framework.utils import train_test_dataset
 train_dataset, test_dataset, D = train_test_dataset(dataset=dataset,
                                                     test_proportion=0.3,
                                                     train_size=N_train,
@@ -72,7 +72,7 @@ training_time = np.zeros((N_rep, len(sensitive_points)))
 
 import glob
 
-from amnesiac import AmnesiacTraining
+from base_framework.amnesiac import AmnesiacTraining
 
 for i in range(N_rep):
 

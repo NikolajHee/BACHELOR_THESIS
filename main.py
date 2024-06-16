@@ -21,7 +21,7 @@ import wandb
 from datetime import datetime
 
 # own functions
-from utils import save_parameters, random_seed, TimeTaking
+from base_framework.utils import save_parameters, random_seed, TimeTaking
 
 # pytorch device
 DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -77,7 +77,7 @@ def main(sweep=True):
         now = datetime.now()
         dt_string = now.strftime("(%d_%m_%Y)_(%H_%M_%S)")
 
-        wandb.init(project="BACHELOR_THESIS",
+        wandb.init(project="BP_final",
                    name=dt_string)
 
     else:
@@ -87,7 +87,7 @@ def main(sweep=True):
         now = datetime.now()
         dt_string = now.strftime("(%d_%m_%Y)_(%H_%M_%S)")
 
-        wandb.init(project="BACHELOR_THESIS",
+        wandb.init(project="BP_final",
                    name=dt_string,
                    config=arguments)
 
@@ -134,10 +134,10 @@ def main(sweep=True):
 
     # load data
     if arguments['dataset'] == 'PTB_XL':
-        from dataset import PTB_XL
+        from base_framework.dataset import PTB_XL
         dataset = PTB_XL(data_path)
     else:
-        from dataset import AEON_DATA
+        from base_framework.dataset import AEON_DATA
         # UCR and UEA datasets
         dataset = AEON_DATA(arguments['dataset'])
 
@@ -150,7 +150,7 @@ def main(sweep=True):
     #     return
 
     # create train/test-split
-    from utils import train_test_dataset
+    from base_framework.utils import train_test_dataset
     train_dataset, test_dataset, D = train_test_dataset(dataset=dataset,
                                                         test_proportion=0.3,
                                                         train_size=arguments['N_train'],
@@ -160,7 +160,7 @@ def main(sweep=True):
                                                     
     # Either train a model or load existing model
     if not arguments['model_path']:
-        from TS2VEC import TS2VEC
+        from base_framework.TS2VEC import TS2VEC
 
         # initialize model
         model = TS2VEC(input_dim=D,
@@ -222,7 +222,7 @@ def main(sweep=True):
         
     else:
         #* clustering
-        from TS2VEC import Encoder
+        from base_framework.TS2VEC import Encoder
 
 
         encoder = Encoder(input_dim=D,
@@ -273,7 +273,7 @@ if any([len(i) > 1 for i in arguments.values() if type(i) == list]):
     print(sweep_configuration)
     #print(sweep_configuration['parameters'])
 
-    sweep_id = wandb.sweep(sweep=sweep_configuration, project="BACHELOR_THESIS")
+    sweep_id = wandb.sweep(sweep=sweep_configuration, project="BP_final")
 
     wandb.agent(sweep_id, function=main)
 else:

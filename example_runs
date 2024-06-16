@@ -1,0 +1,19 @@
+
+
+### Sweep
+python3 main.py --dataset PTB_XL --N_train 3000 --N_test 1000 --n_epochs 15 --learning_rate 0.0005 0.005 -bs 8 64 --hidden_dim 2 128 --output_dim 16 512 -v --alpha 0.1 0.9 -n on off --t-sne -optim adamw adam
+
+### TS2Vec
+python3 main.py --dataset PTB_XL --classifier logistic --n_epochs 25 --normalize off --learning_rate 0.001 -bs 8 -hd 32 -od 64 --t-sne --seed 0 
+python3 main.py --dataset Crop --classifier logistic --n_epochs 25 --normalize off --learning_rate 0.001 -bs 8 -hd 32 -od 64 --t-sne  --seed 0
+python3 main.py --dataset ElectricDevices --classifier logistic --n_epochs 25 --normalize off --learning_rate 0.001 -bs 8 -hd 32 -od 64 --t-sne --seed 0 
+
+### Data Pruning (-dp)
+python3 unlearn.py --dataset PTB_XL -dp --N_shards 5 --N_slices 3 --seed 1 -c logistic --n_epochs 5 5 5  -sp 25 --N_train 3000 --N_test 2000 -od 64 -hd 32
+
+### Amnesiac Unlearning (-a)
+python3 unlearn.py --dataset PTB_XL -a -od 64 -hd 32 --seed 1 -c logistic --n_epochs 15 -sp 200 --N_train 3000 --N_test 2000 
+
+
+
+

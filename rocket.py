@@ -1,29 +1,30 @@
 from sklearn.linear_model import LogisticRegression
 from sktime.transformations.panel.rocket import Rocket
-from dataset import PTB_XL
 import wandb
+import os
+from pathlib import Path
 
 
+from base_framework.dataset import PTB_XL
 
-path_to_data = '/Users/nikolajhertz/Desktop/GIT/BACHELOR_THESIS/code/data/PTB_XL'
-path_to_data = None
+data_path = os.path.join(Path.cwd(), 'PTB_XL')
 
 def main():
-    wandb.init(project="BACHELOR_THESIS",
+    wandb.init(project="BP_final",
                 name='ROCKET')
     config = wandb.config
 
-    trf = Rocket(num_kernels=config.num_kernels, n_jobs=1, random_state=1) 
+    trf = Rocket(num_kernels=config.num_kernels, n_jobs=1, random_state=config.seed) 
 
-    data = PTB_XL(path_to_data)
+    data = PTB_XL(data_path)
 
-    from utils import train_test_dataset
-    train_dataset, test_dataset = train_test_dataset(dataset=data,
-                                                    test_proportion=0.3,
-                                                    train_size=8000,
-                                                    test_size=2000,
-                                                    seed=config.seed,
-                                                    return_stand=False)
+    from base_framework.utils import train_test_dataset
+    train_dataset, test_dataset, D = train_test_dataset(dataset=data,
+                                                        test_proportion=0.3,
+                                                        train_size=3000,
+                                                        test_size=2000,
+                                                        seed=config.seed,
+                                                        return_stand=False)
 
     D_train = train_dataset[:] #data[train_dataset.indices]
     D_test = test_dataset[:] #data[test_dataset.indices]
@@ -45,7 +46,7 @@ def main():
     X_test_transformed = trf.transform(X_test)
 
     # classification:
-    model = LogisticRegression(max_iter=1000, n_jobs=-1, random_state=1)
+    model = LogisticRegression(max_iter=1000, n_jobs=-1, random_state=config.seed)
 
     model.fit(X_train_transformed, Y_train)
 
@@ -69,6 +70,6 @@ sweep_configuration = {
     },
 }
 
-sweep_id = wandb.sweep(sweep=sweep_configuration, project="BACHELOR_THESIS")
+sweep_id = wandb.sweep(sweep=sweep_configuration, project="BP_final")
 
 wandb.agent(sweep_id, function=main)

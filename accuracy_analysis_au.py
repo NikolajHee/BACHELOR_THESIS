@@ -10,7 +10,7 @@ import numpy as np
 from datetime import datetime
 
 # own functions
-from utils import save_parameters, random_seed, TimeTaking
+from base_framework.utils import save_parameters, random_seed, TimeTaking
 
 
 # pytorch device
@@ -26,7 +26,7 @@ normalize = False
 hidden_dim = 32
 output_dim = 64
 classifier = 'logistic'
-n_epochs = 15
+n_epochs = 10
 batch_size = 8
 learning_rate = 1e-3
 p = 0.5
@@ -45,20 +45,20 @@ final_path = 'amnesiac_unlearning'
 save_path = os.path.join(results_path, dataset_name, final_path)
 
 
-from utils import random_seed
+from base_framework.utils import random_seed
 
 random_seed(1)
 
 if dataset_name == 'PTB_XL':
-    from dataset import PTB_XL_v2
+    from base_framework.dataset import PTB_XL_v2
     dataset = PTB_XL_v2(data_path)
 else:
-    from dataset import AEON_DATA_v2
+    from base_framework.dataset import AEON_DATA_v2
     # UCR and UEA datasets
     dataset = AEON_DATA_v2(dataset_name)
 
 
-from utils import train_test_dataset
+from base_framework.utils import train_test_dataset
 train_dataset, test_dataset, D = train_test_dataset(dataset=dataset,
                                                     test_proportion=0.3,
                                                     train_size=N_train,
@@ -71,13 +71,15 @@ N_rep = 11
 
 import glob
 
-from amnesiac import AmnesiacTraining
+from base_framework.amnesiac import AmnesiacTraining
 
 save_accuracy = np.zeros((N_rep, 4)) 
 # [before_test_accuracy, before_unlearn_accuracy]
 # [after_test_accuracy, after_unlearn_accuracy]
 
 save_mia = np.zeros((N_rep, 4*4))
+
+extra_mia = np.zeros((N_rep, 4))
 
 for rep in range(N_rep):
     if os.path.isdir(save_path):
@@ -138,8 +140,8 @@ for rep in range(N_rep):
 
     #* MIA
     #from dataset import mia_train, mia_data
-    from utils import mia_train_test_dataset
-    from mia import MIA
+    from base_framework.utils import mia_train_test_dataset
+    from base_framework.mia import MIA, mia_loss
 
     # # train data
     # train_mia = mia_train(train_dataset=train_dataset,
@@ -150,6 +152,9 @@ for rep in range(N_rep):
 
     mia = MIA(device=DEVICE)
 
+    mia2 = mia_loss(device=DEVICE)
+
+
 
 
     mia_train, mia_test = mia_train_test_dataset(in_dataset=unlearning_data, 
@@ -159,6 +164,14 @@ for rep in range(N_rep):
                                                  seed=1)
     
 
+    mia2.train(model, mia_train)
+
+    test1 = mia2.evaluate(model, mia_train)
+    test2 = mia2.evaluate(model, mia_test)
+
+    extra_mia[rep, 0] = test1
+    extra_mia[rep, 1] = test2
+    
 
     train_accuracy = mia.train(model=model, 
                                train_data=mia_train)
@@ -207,6 +220,8 @@ for rep in range(N_rep):
 
     mia = MIA(device=DEVICE)
 
+    mia2 = mia_loss(device=DEVICE)
+
 
     mia_train, mia_test = mia_train_test_dataset(in_dataset=unlearning_data, 
                                                  out_dataset=test_dataset, 
@@ -214,6 +229,15 @@ for rep in range(N_rep):
                                                  N_test=len(unlearning_data), 
                                                  seed=1)
     
+
+    mia2.train(model, mia_train)
+
+    test1 = mia2.evaluate(model, mia_train)
+    test2 = mia2.evaluate(model, mia_test)
+
+    extra_mia[rep, 2] = test1
+    extra_mia[rep, 3] = test2
+
     train_accuracy = mia.train(model=model, 
                                train_data=mia_train)
     
@@ -226,5 +250,6 @@ for rep in range(N_rep):
 
 
     #* Save
-    np.save(os.path.join(save_path, 'save_accuracy.npy'), save_accuracy)
-    np.save(os.path.join(save_path, 'save_mia.npy'), save_mia)
+    np.save(os.path.join(save_path, 'save_accuracy_new.npy'), save_accuracy)
+    np.save(os.path.join(save_path, 'save_mia_new.npy'), save_mia)
+    np.save(os.path.join(save_path, 'extra_mia_new.npy'), extra_mia)

@@ -10,7 +10,7 @@ from datetime import datetime
 import numpy as np
 
 # own functions
-from utils import save_parameters, random_seed, TimeTaking
+from base_framework.utils import save_parameters, random_seed, TimeTaking
 
 
 # pytorch device
@@ -46,22 +46,22 @@ final_path = 'data_pruning'
 save_path = os.path.join(results_path, dataset_name, final_path)
 
 
-from utils import random_seed
+from base_framework.utils import random_seed
 
-from utils import random_seed
+from base_framework.utils import random_seed
 
 random_seed(1)
 
 if dataset_name == 'PTB_XL':
-    from dataset import PTB_XL
+    from base_framework.dataset import PTB_XL
     dataset = PTB_XL(data_path)
 else:
-    from dataset import AEON_DATA
+    from base_framework.dataset import AEON_DATA
     # UCR and UEA datasets
     dataset = AEON_DATA(dataset_name)
 
 
-from utils import train_test_dataset
+from base_framework.utils import train_test_dataset
 train_dataset, test_dataset, D = train_test_dataset(dataset=dataset,
                                                     test_proportion=0.3,
                                                     train_size=N_train,
@@ -74,9 +74,9 @@ N_rep = 20
 
 training_time = np.zeros((N_rep, len(sensitive_points)))
 
-from data_pruning import Pruning
+from base_framework.data_pruning import Pruning
 
-for i in range(13, N_rep):
+for i in range(N_rep):
     for j, sp in enumerate(sensitive_points):
         print('-'*20)
         print(f"Repetition: ({i}). Amount of sensitive points: ({sp}).")
