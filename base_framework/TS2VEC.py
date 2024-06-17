@@ -19,9 +19,8 @@ from tqdm import tqdm
 
 
 def take_per_row(A, indx, num_elem):
-    """
-    From github of ts2vec
-    """
+    # from https://github.com/zhihanyue/ts2vec
+    # (with added comments)
     all_indx = indx[:,None] + np.arange(num_elem)
     return A[torch.arange(all_indx.shape[0])[:,None], all_indx]
 
@@ -38,8 +37,7 @@ class RandomCropping(nn.Module):
     
     def __call__(self, x):
 
-        # TOOO: how does this work?
-       
+        # from https://github.com/zhihanyue/ts2vec       
         ts_l = x.size(1)
         crop_l = np.random.randint(low=2 ** (1), high=ts_l+1)
 
@@ -59,6 +57,8 @@ class RandomCropping(nn.Module):
 
 
 class SamePadConv(nn.Module):
+    # from https://github.com/zhihanyue/ts2vec
+
     def __init__(self, in_channels, out_channels, kernel_size, dilation=1, groups=1):
         super().__init__()
         self.receptive_field = (kernel_size - 1) * dilation + 1
@@ -78,6 +78,8 @@ class SamePadConv(nn.Module):
         return out
     
 class ConvBlock(nn.Module):
+    # from https://github.com/zhihanyue/ts2vec
+
     def __init__(self, in_channels, out_channels, kernel_size, dilation, final=False):
         super().__init__()
         self.conv1 = SamePadConv(in_channels, out_channels, kernel_size, dilation=dilation)
@@ -93,6 +95,7 @@ class ConvBlock(nn.Module):
         return x + residual
 
 class DilatedConvEncoder(nn.Module):
+    # from https://github.com/zhihanyue/ts2vec
     def __init__(self, in_channels, channels, kernel_size):
         super().__init__()
         self.net = nn.Sequential(*[
@@ -175,6 +178,7 @@ class Encoder(nn.Module):
 
 
 def hierarchical_contrastive_loss(z1, z2, alpha=0.5, temporal_unit=0):
+    # from https://github.com/zhihanyue/ts2vec
     loss = torch.tensor(0., device=z1.device)
     d = 0
     while z1.size(1) > 1:
@@ -193,6 +197,9 @@ def hierarchical_contrastive_loss(z1, z2, alpha=0.5, temporal_unit=0):
     return loss / d
 
 def instance_contrastive_loss(z1, z2):
+    # from https://github.com/zhihanyue/ts2vec
+    # (with added comments)
+
     # B is batch size, T is length of signals and the last dimension is the feature dimension
     B, T = z1.size(0), z1.size(1)
     if B == 1:
@@ -220,6 +227,8 @@ def instance_contrastive_loss(z1, z2):
 
 
 def temporal_contrastive_loss(z1, z2):
+    # from https://github.com/zhihanyue/ts2vec
+    # (with added comments)
     """
     outputs zero when z1 = z2 or z1 = -z2  
     """
