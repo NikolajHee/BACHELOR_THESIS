@@ -11,10 +11,6 @@ The scripts is mainly build on pytorch and scikit-learn. ROCKET requires sktime.
 
 The scripts were run using the files in `/scripts`. The data is assumed to lay in folder `PTB_XL/`.
 
-## License
-
-Information about the project's license and any relevant terms or conditions.
-
 ## Files
 
 A list of the important files in the repository and their purposes.
